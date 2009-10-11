@@ -1,0 +1,4 @@
+name = Import Product
+description = Imports product data for ubercart.
+package = Import
+core = 6.x

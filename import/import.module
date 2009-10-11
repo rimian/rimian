@@ -1,0 +1,240 @@
+<?php
+/*
+ * Written by Rimian Perkins: http://www.rimian.com.au
+ * Released under GNU LESSER GENERAL PUBLIC LICENSE
+ * Please buy me beer.
+ */
+
+
+include('import.node.inc');
+
+function import_menu() {
+  $items = array();
+  $items['import'] = array(
+    'title' => 'Import File',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('import_form'),
+    'access arguments' => array('import nodes'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['import/fields'] = array(
+    'title' => 'Import File',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('import_form_fields'),
+    'access arguments' => array('import nodes'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+function import_form($form_state) {
+  $file = $form_state['post']['file'];
+  $form = array();
+  
+  $options = array();
+  foreach(import_get_files() as $file_object) {
+    $options[$file_object->basename] = $file_object->basename;
+  }
+  
+  $form['files'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Files',
+    '#collapsible' => TRUE,
+    '#description' => 'Your import path is: ' . import_get_csv_path(),
+  );
+  $form['files']['file'] = array(
+    '#type' => 'radios',
+    '#options' => $options,
+  );
+  $form['type'] = array(
+    '#type' => 'select',
+    '#title' => t('Node Type'),
+    '#description' => 'Save new nodes as this type.',
+    '#default_value' => variable_get('import_default_type', 'page'),
+    '#options' => array('page' => 'Page'),
+  );
+  $form['key'] = array(
+    '#type' => 'select',
+    '#title' => 'Update Key',
+    '#description' => 'Load and update nodes using this key.to match.',
+    '#default_value' => variable_get('import_default_key', ''),
+    '#options' => array('<none>'),
+  );
+  $form['workflow'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Work Flow',
+    '#collapsible' => TRUE,
+  );
+  $form['workflow']['skip-new'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Skip new rows',
+    '#description' => 'Skip rows that are not matched with the above ' . $form['key']['#title'],
+    '#default_value' => variable_get('import_default_skip_new', 0),
+  );
+  $form['workflow']['skip-existing'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Skip existing rows',
+    '#description' => 'Skip rows that match with the above the above ' . $form['key']['#title'],
+    '#default_value' => variable_get('import_default_skip_existing', 0),
+  );
+  $form['workflow']['new-published'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Published',
+    '#description' => 'New nodes are set set to Published if this is checked.',
+    '#default_value' => variable_get('import_default_new_published', 1),
+  );
+  $form['preview'] = array(
+    '#type' => 'button',
+    '#value' => 'Preview File',
+    '#submit' => 'import_preview_rows',
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Next',
+    '#attributes' => array('onclick' => '
+      var form = document.getElementById(\'import-form\');
+      form.action = \'import/fields\';
+      '),
+  );
+  if(!empty($file)) {
+    $form['rows'] = array(
+      '#type' => 'item',
+      '#value' => import_preview_rows($file, 20),
+    );
+  }
+  return $form;
+}
+
+function import_preview_rows($file, $limit) {
+  $header = import_file_to_array($file, 'header');
+  $rows = import_file_to_array($file, 'list', $limit);
+  return theme('table', $header, $rows, array('style' => 'font-size: 0.8em;'));
+}
+
+/*
+ * Form alter this one to add fields to the CSV import
+ */
+function import_form_file_fields($form_state) {
+  $form['fields'] = array(
+    '#type' => 'select',
+    '#options' => array('<ignore>') + _import_get_fields(),
+  );
+  return $form;
+}
+
+function import_form_fields($form_state) {
+  
+  //expose this to other modules through nested form: 'import_form_file_fields'
+  $file_fields = drupal_retrieve_form('import_form_file_fields', $form_state);
+  drupal_prepare_form('import_form_file_fields', $file_fields, $form_state);
+  
+  $form = array();
+  if(empty($form_state['post']['file'])){
+    return $form;
+  }
+  foreach(array('file', 'key', 'skip-new', 'skip-existing', 'type', 'new-published') as $hidden) {
+    $form[$hidden] = array('#type' => 'hidden', '#value' => $form_state['post'][$hidden],);
+  }
+  foreach(import_file_to_array($form_state['post']['file'], 'header') as $key => $col) {
+    if(!empty($col)) {
+      $do_it = TRUE;
+      $form['field-'.$key] = $file_fields['fields'];
+      $form['field-'.$key]['#title'] = $col;
+    }
+  }
+  if($do_it) {
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => 'Do it',
+    );
+  }
+  return $form;
+}
+
+function import_form_fields_submit($form, &$form_state) {
+  $limit = variable_get('import_row_limit', 0);
+  $fields = import_get_field_keys_value($form_state['values']);
+  $rows = import_file_to_array($form_state['values']['file'], 'skip-header', $limit, $fields);
+  foreach($rows as $row) {
+    $row = array_combine($fields, $row);
+    $key = $form_state['values']['key'];
+    $node = empty($form_state['values']['skip-existing']) ? import_invoke_node_load($key, $row[$key]) : import_create_node($row);
+    if(!$node && empty($form_state['values']['skip-new'])) {
+      $node = import_create_node($row);
+      $node->type = $form_state['values']['type'];
+      $node->status = empty($form_state['values']['new-published']) ? 0 : 1;
+    }
+    import_invoke_importapi($node, $row);
+    node_save($node);
+  }
+  drupal_set_message('Imported!', 'status', FALSE);
+}
+
+function import_get_field_keys_value($values) {
+  $keys = array();
+  for($i = 0; $i < count(import_file_to_array($values['file'], 'header')); $i++) {
+    $field = $values['field-'. $i];
+    if(!empty($field)) {
+      $keys[$i] = $field;
+    }
+  }
+  return $keys;
+}
+
+function import_file_to_array($file, $op = 'list', $limit = 0, $filter = array()) {
+  set_time_limit(0);
+  $file = import_get_csv_path($file);
+  $rows = array();
+  if(file_exists($file) && !is_dir($file)){
+    drupal_set_message('Opened file: '. $file, 'status', FALSE);
+    $handle = fopen($file, "r");
+    while (($data = fgetcsv($handle)) !== FALSE) {
+      if(!empty($filter)) {
+        $data = array_intersect_key($data, $filter);
+      }
+      if($op == 'header'){
+        $rows = _import_tidy_data($data);
+        break;
+      }
+      elseif($op == 'skip-header' && !count($rows)) {
+        $op = 'list';
+        next;
+      }
+      else{
+        if(!empty($data)){
+          $rows[] = _import_tidy_data($data);
+          if($limit > 0 && count($rows) == $limit) {
+            break;
+          }
+        }
+      }
+    }
+    fclose($handle);
+  }
+  else{
+    drupal_set_message('File does not exist.', 'error');
+  }
+  return $rows;
+}
+
+function import_get_files() {
+  $files = array();
+  foreach(file_scan_directory(import_get_csv_path(), 'csv') as $file){
+    $files[] = $file;
+  }
+  return $files; 
+}
+
+function import_get_csv_path($file = FALSE) {
+  $path = variable_get('import_csv_path', 'sites/default/files/csv');
+  return !$file ? $path : $path .'/'. $file;
+}
+
+function _import_tidy_data($data) {
+  $tidy_data = array();
+  foreach($data as $col){
+    $tidy_data[] = trim(check_plain($col));
+  }
+  return $tidy_data;
+}
+

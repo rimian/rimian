@@ -1,0 +1,6 @@
+name = Taxonomy Import
+description = Matches taxonomy terms to nodes.
+package = Import
+core = 6.x
+dependencies[] = import
+dependencies[] = taxonomy 

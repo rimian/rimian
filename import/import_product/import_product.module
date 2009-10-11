@@ -1,0 +1,43 @@
+<?php
+
+function import_product_importapi(&$node, $data) {
+  $fields = array_keys(_import_product_get_fields());
+  foreach($fields as $field) {
+    if(!empty($data[$field])) {
+      $node->$field = check_plain($data[$field]);
+    }
+  }
+}
+
+function import_product_form_alter(&$form, $form_state, $form_id) {
+  switch($form_id) {
+    case 'import_form':
+      $form['type']['#options']['product'] = 'Product';
+      $form['key']['#options']['model'] = 'SKU';
+      break;
+  
+    case 'import_form_file_fields':
+      $form['fields']['#options'] += _import_product_get_fields();
+      break;
+  }
+}
+
+function import_product_import_node_load($key, $value) {
+  switch($key) {
+    case 'model':
+      $vid = db_result(db_query("SELECT vid FROM {uc_products} WHERE model = '%s'", $value));
+      return $vid ? node_load(array('vid' => $vid)) : FALSE;
+      
+    default:
+      return FALSE;
+  }
+}
+
+function _import_product_get_fields() {
+  return array(
+    'model' => 'SKU',
+    'list_price' => 'List Price',
+    'cost' => 'Cost',
+    'sell_price' => 'Sell Price',
+  );
+}
