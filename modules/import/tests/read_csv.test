@@ -1,0 +1,35 @@
+<?php
+
+class ImportDataTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'import',
+      'description' => 'Ensure that the import module reads datafiles and converts them correctly.',
+      'group' => 'Import',
+    );
+  }
+  
+  public function setUp() {
+    parent::setUp('import');
+    $privileged_user = $this->drupalCreateUser(array('import content'));
+    $this->drupalLogin($privileged_user);
+  }
+  
+  public function testGetCSV() {
+    
+    $path = drupal_get_path('module', 'import') . '/tests';
+    variable_set('import_csv_path', $path);
+    
+    $this->assertEqual(import_get_file_path(), is_dir($path), 'Directory Exists', 'import');
+    $file = 'test.csv';
+    $this->assertEqual(import_get_file_path($file), file_exists($path.$file), 'File '. $file .' Exists', 'import');
+    
+  } 
+  //convert example CSV to an array
+  
+  //get header
+  
+  //skip header
+  
+}

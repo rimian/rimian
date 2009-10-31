@@ -50,7 +50,7 @@ function import_form($form_state) {
     '#type' => 'fieldset',
     '#title' => 'Files',
     '#collapsible' => TRUE,
-    '#description' => 'Your import path is: ' . import_get_csv_path(),
+    '#description' => 'Your import path is: ' . import_get_file_path(),
   );
   $form['files']['file'] = array(
     '#type' => 'radios',
@@ -193,7 +193,7 @@ function import_get_field_keys_value($values) {
 
 function import_file_to_array($file, $op = 'list', $limit = 0, $filter = array()) {
   set_time_limit(0);
-  $file = import_get_csv_path($file);
+  $file = import_get_file_path($file);//TODO: move this out of this function.  
   $rows = array();
   if(file_exists($file) && !is_dir($file)){
     drupal_set_message('Opened file: '. $file, 'status', FALSE);
@@ -229,13 +229,13 @@ function import_file_to_array($file, $op = 'list', $limit = 0, $filter = array()
 
 function import_get_files() {
   $files = array();
-  foreach(file_scan_directory(import_get_csv_path(), 'csv') as $file){
+  foreach(file_scan_directory(import_get_file_path(), 'csv') as $file){
     $files[] = $file;
   }
   return $files; 
 }
 
-function import_get_csv_path($file = FALSE) {
+function import_get_file_path($file = FALSE) {
   $path = variable_get('import_csv_path', 'sites/default/files/csv');
   return !$file ? $path : $path .'/'. $file;
 }
