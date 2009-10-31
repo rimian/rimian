@@ -21,20 +21,32 @@ class ImportDataTestCase extends DrupalWebTestCase {
     //resources for this test.
     $this->path = drupal_get_path('module', 'import') . '/tests';
     $this->file = 'test.csv';// It's a real file!
+    variable_set('import_csv_path', $this->path);
   }
   
   public function testGetCSV() {
-    variable_set('import_csv_path', $this->path);
     $this->assertTrue(file_exists($this->path.'/'.$this->file), 'File exists', 'File');
     $this->assertTrue(is_dir($this->path), 'Is directory', 'File');
     $this->assertEqual(import_get_file_path(), is_dir($this->path), 'Directory Exists', 'File');
     $this->assertEqual(import_get_file_path($this->file), file_exists($this->path.'/'.$this->file), 'File '. $this->file .' Exists', 'File');
+    $this->assertFalse(import_get_file_path('file-no-exist.bummer'), 'File not exist returns false', 'File');
+    variable_set('import_csv_path', '/nothing');
+    $this->assertFalse(import_get_file_path(), 'Directory not exist returns false', 'File');
+    variable_set('import_csv_path', $this->path);
   }
   
   //convert example CSV to an array
-  //public function testConvertFiletoArray() {
-    //$file = import_get_file_path($file);
-  //}
+  public function testConvertFiletoArray() {
+    $file = import_get_file_path($this->file);
+    $expected = array(
+      array('Col 1', 'Col 2', 'Col 3'),
+      array('Cindy', 'Bobby', 'Alice'),
+      array('Jan', 'Greg', 'Mum'),
+      array('Marsha', 'Peter', 'Dad'),
+    );
+    $file_to_array = import_file_to_array($file);
+    $this->assertEqual($expected, $file_to_array, 'CSV converted to exptected array', 'File');
+  }
   
   
   //get header

@@ -43,7 +43,7 @@ function import_form($form_state) {
   
   $options = array();
   foreach(import_get_files() as $file_object) {
-    $options[$file_object->basename] = $file_object->basename;
+    $options[$file_object->filename] = $file_object->basename;
   }
   
   $form['files'] = array(
@@ -191,9 +191,15 @@ function import_get_field_keys_value($values) {
   return $keys;
 }
 
+/**
+ * @param string $file. The full path of the file from web root. 
+ * @param string $op. Operation performed for this request: header, skip-header, list  
+ * @param int $limit. How many rows. Zero for all.
+ * @param array $filter. If an array of keys are supplied the other columns are discarded.
+ * @return array $rows. A nested array of rows and colums.
+ */
 function import_file_to_array($file, $op = 'list', $limit = 0, $filter = array()) {
   set_time_limit(0);
-  $file = import_get_file_path($file);//TODO: move this out of this function.  
   $rows = array();
   if(file_exists($file) && !is_dir($file)){
     drupal_set_message('Opened file: '. $file, 'status', FALSE);
@@ -235,9 +241,13 @@ function import_get_files() {
   return $files; 
 }
 
-function import_get_file_path($file = FALSE) {
+function import_get_file_path($basename = FALSE) {
   $path = variable_get('import_csv_path', 'sites/default/files/csv');
-  return !$file ? $path : $path .'/'. $file;
+  $file = !$basename ? $path : $path . '/'. $basename;
+  if(!is_dir($path) || ($basename && !file_exists($file))) {
+    return false;
+  }
+  return $file;
 }
 
 function _import_tidy_data($data) {
