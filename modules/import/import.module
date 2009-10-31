@@ -8,23 +8,33 @@
 
 include('import.node.inc');
 
+/**
+ * Implementation of hook_menu() 
+ */
 function import_menu() {
   $items = array();
   $items['import'] = array(
-    'title' => 'Import File',
+    'title' => 'Import Data',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('import_form'),
-    'access arguments' => array('import nodes'),
+    'access arguments' => array('import content'),
     'type' => MENU_NORMAL_ITEM,
   );
   $items['import/fields'] = array(
-    'title' => 'Import File',
+    'title' => 'Import Data',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('import_form_fields'),
-    'access arguments' => array('import nodes'),
+    'access arguments' => array('import content'),
     'type' => MENU_CALLBACK,
   );
   return $items;
+}
+
+/**
+ * Implementation of hook_perm() 
+ */
+function import_perm() {
+  return array('import content');
 }
 
 function import_form($form_state) {
