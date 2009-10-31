@@ -2,6 +2,9 @@
 
 class ImportDataTestCase extends DrupalWebTestCase {
 
+  private $path;
+  private $file;
+
   public static function getInfo() {
     return array(
       'name' => 'import',
@@ -14,19 +17,25 @@ class ImportDataTestCase extends DrupalWebTestCase {
     parent::setUp('import');
     $privileged_user = $this->drupalCreateUser(array('import content'));
     $this->drupalLogin($privileged_user);
+  
+    //resources for this test.
+    $this->path = drupal_get_path('module', 'import') . '/tests';
+    $this->file = 'test.csv';// It's a real file!
   }
   
   public function testGetCSV() {
-    
-    $path = drupal_get_path('module', 'import') . '/tests';
-    variable_set('import_csv_path', $path);
-    
-    $this->assertEqual(import_get_file_path(), is_dir($path), 'Directory Exists', 'import');
-    $file = 'test.csv';
-    $this->assertEqual(import_get_file_path($file), file_exists($path.$file), 'File '. $file .' Exists', 'import');
-    
-  } 
+    variable_set('import_csv_path', $this->path);
+    $this->assertTrue(file_exists($this->path.'/'.$this->file), 'File exists', 'File');
+    $this->assertTrue(is_dir($this->path), 'Is directory', 'File');
+    $this->assertEqual(import_get_file_path(), is_dir($this->path), 'Directory Exists', 'File');
+    $this->assertEqual(import_get_file_path($this->file), file_exists($this->path.'/'.$this->file), 'File '. $this->file .' Exists', 'File');
+  }
+  
   //convert example CSV to an array
+  //public function testConvertFiletoArray() {
+    //$file = import_get_file_path($file);
+  //}
+  
   
   //get header
   
