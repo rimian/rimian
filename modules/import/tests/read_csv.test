@@ -2,9 +2,12 @@
 
 class ImportDataTestCase extends DrupalWebTestCase {
 
+<<<<<<< HEAD
   private $path;
   private $file;
 
+=======
+>>>>>>> 301d66d... adding test file and refactoring a little on function names
   public static function getInfo() {
     return array(
       'name' => 'import',
@@ -17,6 +20,7 @@ class ImportDataTestCase extends DrupalWebTestCase {
     parent::setUp('import');
     $privileged_user = $this->drupalCreateUser(array('import content'));
     $this->drupalLogin($privileged_user);
+<<<<<<< HEAD
   
     //resources for this test.
     $this->path = drupal_get_path('module', 'import') . '/tests';
@@ -54,5 +58,24 @@ class ImportDataTestCase extends DrupalWebTestCase {
     $this->assertEqual(array_slice($expected, 0, -1), import_file_to_array($file, 'list', count($expected) - 1), 'CSV got N rows', 'File');
     $this->assertEqual(array_slice($expected, 1, -1), import_file_to_array($file, 'skip-header', count($expected) - 2), 'CSV got N rows and skipped header', 'File');
   }
+=======
+  }
+  
+  public function testGetCSV() {
+    
+    $path = drupal_get_path('module', 'import') . '/tests';
+    variable_set('import_csv_path', $path);
+    
+    $this->assertEqual(import_get_file_path(), is_dir($path), 'Directory Exists', 'import');
+    $file = 'test.csv';
+    $this->assertEqual(import_get_file_path($file), file_exists($path.$file), 'File '. $file .' Exists', 'import');
+    
+  } 
+  //convert example CSV to an array
+  
+  //get header
+  
+  //skip header
+>>>>>>> 301d66d... adding test file and refactoring a little on function names
   
 }

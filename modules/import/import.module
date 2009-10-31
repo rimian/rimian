@@ -200,6 +200,10 @@ function import_get_field_keys_value($values) {
  */
 function import_file_to_array($file, $op = 'list', $limit = 0, $filter = array()) {
   set_time_limit(0);
+<<<<<<< HEAD
+=======
+  $file = import_get_file_path($file);//TODO: move this out of this function.  
+>>>>>>> 301d66d... adding test file and refactoring a little on function names
   $rows = array();
   if(file_exists($file) && !is_dir($file)){
     drupal_set_message('Opened file: '. $file, 'status', FALSE);
@@ -235,13 +239,21 @@ function import_file_to_array($file, $op = 'list', $limit = 0, $filter = array()
 
 function import_get_files($mask = 'csv') {
   $files = array();
+<<<<<<< HEAD
   foreach(file_scan_directory(import_get_file_path(), $mask) as $file){
+=======
+  foreach(file_scan_directory(import_get_file_path(), 'csv') as $file){
+>>>>>>> 301d66d... adding test file and refactoring a little on function names
     $files[] = $file;
   }
   return $files; 
 }
 
+<<<<<<< HEAD
 function import_get_file_path($basename = FALSE) {
+=======
+function import_get_file_path($file = FALSE) {
+>>>>>>> 301d66d... adding test file and refactoring a little on function names
   $path = variable_get('import_csv_path', 'sites/default/files/csv');
   $file = !$basename ? $path : $path . '/'. $basename;
   if(!is_dir($path) || ($basename && !file_exists($file))) {
