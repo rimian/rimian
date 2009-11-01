@@ -1,0 +1,33 @@
+<?php
+
+class ImportNodeTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Import Node',
+      'description' => 'Test Node update and save with workflow',
+      'group' => 'Import',
+    );
+  }
+  
+  public function setUp() {
+    parent::setUp('import');
+    parent::setUp('import node');
+    $privileged_user = $this->drupalCreateUser(array('import content'));
+    $this->drupalLogin($privileged_user);
+  
+    $settings = array();
+    $this->drupalCreateNode($settings);
+  }
+  
+  public function testNodeLoad() {
+    $key = 'nid';
+    $node = $this->drupalCreateNode();
+    $data = array(
+      'title' => $this->randomName(32),
+    );
+    
+  }
+  
+  
+}
