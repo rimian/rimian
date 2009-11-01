@@ -229,6 +229,7 @@ function import_file_to_array($file, $op = 'list', $limit = 0, $filter = array()
   }
   else{
     drupal_set_message('File does not exist.', 'error');
+    return FALSE;
   }
   return $rows;
 }

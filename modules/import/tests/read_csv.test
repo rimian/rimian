@@ -29,10 +29,14 @@ class ImportDataTestCase extends DrupalWebTestCase {
     $this->assertTrue(is_dir($this->path), 'Is directory', 'File');
     $this->assertEqual(import_get_file_path(), is_dir($this->path), 'Directory Exists', 'File');
     $this->assertEqual(import_get_file_path($this->file), file_exists($this->path.'/'.$this->file), 'File '. $this->file .' Exists', 'File');
-    $this->assertFalse(import_get_file_path('file-no-exist.bummer'), 'File not exist returns false', 'File');
-    variable_set('import_csv_path', '/nothing');
-    $this->assertFalse(import_get_file_path(), 'Directory not exist returns false', 'File');
-    variable_set('import_csv_path', $this->path);
+  }
+  
+  public function testBadFiles() {
+    // === operator is used because array() == FALSE !
+    $this->assertTrue(import_get_file_path('file-no-exist.bummer') === FALSE, 'File not exist returns false', 'File');
+    $this->assertTrue(import_file_to_array(FALSE) === FALSE, 'Convert no file to FALSE', 'File');
+    variable_set('import_csv_path', '/path/does/not/exist');
+    $this->assertTrue(import_get_file_path() === FALSE, 'Directory not exist returns false', 'File');
   }
   
   //convert example CSV to an array
