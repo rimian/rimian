@@ -212,9 +212,8 @@ function import_file_to_array($file, $op = 'list', $limit = 0, $filter = array()
         $rows = _import_tidy_data($data);
         break;
       }
-      elseif($op == 'skip-header' && !count($rows)) {
+      elseif($op == 'skip-header') {
         $op = 'list';
-        next;
       }
       else{
         if(!empty($data)){
@@ -234,9 +233,9 @@ function import_file_to_array($file, $op = 'list', $limit = 0, $filter = array()
   return $rows;
 }
 
-function import_get_files() {
+function import_get_files($mask = 'csv') {
   $files = array();
-  foreach(file_scan_directory(import_get_file_path(), 'csv') as $file){
+  foreach(file_scan_directory(import_get_file_path(), $mask) as $file){
     $files[] = $file;
   }
   return $files; 

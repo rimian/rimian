@@ -48,13 +48,11 @@ class ImportDataTestCase extends DrupalWebTestCase {
       array('Jan', 'Greg', 'Mum'),
       array('Marsha', 'Peter', 'Dad'),
     );
-    $file_to_array = import_file_to_array($file);
-    $this->assertEqual($expected, $file_to_array, 'CSV converted to exptected array', 'File');
+    $this->assertEqual($expected, import_file_to_array($file), 'CSV converted to exptected array', 'File');
+    $this->assertEqual($expected[0], import_file_to_array($file, 'header'), 'CSV got 1st Row', 'File');
+    $this->assertEqual(array_slice($expected, 1), import_file_to_array($file, 'skip-header'), 'CSV got rows and skipped header', 'File');
+    $this->assertEqual(array_slice($expected, 0, -1), import_file_to_array($file, 'list', count($expected) - 1), 'CSV got N rows', 'File');
+    $this->assertEqual(array_slice($expected, 1, -1), import_file_to_array($file, 'skip-header', count($expected) - 2), 'CSV got N rows and skipped header', 'File');
   }
-  
-  
-  //get header
-  
-  //skip header
   
 }
