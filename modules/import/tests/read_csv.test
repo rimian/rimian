@@ -24,6 +24,10 @@ class ImportDataTestCase extends DrupalWebTestCase {
     variable_set('import_csv_path', $this->path);
   }
   
+  function tearDown() {
+    parent::tearDown();
+  }
+  
   public function testGetCSV() {
     $this->assertTrue(file_exists($this->path.'/'.$this->file), 'File exists', 'File');
     $this->assertTrue(is_dir($this->path), 'Is directory', 'File');

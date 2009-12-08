@@ -2,11 +2,10 @@
 /*
  * Written by Rimian Perkins: http://www.rimian.com.au
  * Released under GNU LESSER GENERAL PUBLIC LICENSE
- * Please buy me beer.
+ * Please buy me beer if you use this module and happen to be around when I am drinking a beer
  */
 
-
-include('import.node.inc');
+include('import.file.inc');
 
 /**
  * Implementation of hook_menu() 
@@ -58,18 +57,18 @@ function import_form($form_state) {
   );
   $form['type'] = array(
     '#type' => 'select',
-    '#title' => t('Node Type'),
-    '#description' => 'Save new nodes as this type.',
-    '#default_value' => variable_get('import_default_type', 'page'),
-    '#options' => array('page' => 'Page'),
+    '#title' => t('Load or Create Object Type'),
+    '#description' => 'This is the type of object that gets loaded or created with the import data. It could be a node, user or taxonomy term',
+    '#options' => _import_get_object_types(),
   );
   $form['key'] = array(
     '#type' => 'select',
     '#title' => 'Update Key',
-    '#description' => 'Load and update nodes using this key.to match.',
+    '#description' => 'Load and update items matching this key.',
     '#default_value' => variable_get('import_default_key', ''),
-    '#options' => array('<none>'),
+    '#options' => array('<none>') + _import_get_keys(),
   );
+  //TODO: hook workflow
   $form['workflow'] = array(
     '#type' => 'fieldset',
     '#title' => 'Work Flow',
@@ -87,12 +86,14 @@ function import_form($form_state) {
     '#description' => 'Skip rows that match with the above the above ' . $form['key']['#title'],
     '#default_value' => variable_get('import_default_skip_existing', 0),
   );
+  /*
   $form['workflow']['new-published'] = array(
     '#type' => 'checkbox',
     '#title' => 'Published',
     '#description' => 'New nodes are set set to Published if this is checked.',
     '#default_value' => variable_get('import_default_new_published', 1),
   );
+  */
   $form['preview'] = array(
     '#type' => 'button',
     '#value' => 'Preview File',
@@ -127,7 +128,7 @@ function import_preview_rows($file, $limit) {
 function import_form_file_fields($form_state) {
   $form['fields'] = array(
     '#type' => 'select',
-    '#options' => array('<ignore>') + _import_get_fields(),
+    '#options' => _import_get_fields(),
   );
   return $form;
 }
@@ -163,24 +164,75 @@ function import_form_fields($form_state) {
 
 function import_form_fields_submit($form, &$form_state) {
   $limit = variable_get('import_row_limit', 0);
-  $fields = import_get_field_keys_value($form_state['values']);
+  $fields = _import_get_form_field_keys_value($form_state['values']);
   $rows = import_file_to_array($form_state['values']['file'], 'skip-header', $limit, $fields);
+  $object_type = $form_state['values']['type'];
   foreach($rows as $row) {
     $row = array_combine($fields, $row);
     $key = $form_state['values']['key'];
-    $node = empty($form_state['values']['skip-existing']) ? import_invoke_node_load($key, $row[$key]) : import_create_node($row);
-    if(!$node && empty($form_state['values']['skip-new'])) {
-      $node = import_create_node($row);
-      $node->type = $form_state['values']['type'];
-      $node->status = empty($form_state['values']['new-published']) ? 0 : 1;
+    if(empty($form_state['values']['skip-existing'])) {
+      $object = import_invoke_object($object_type, array('key' => $key, 'value' => $row[$key]), 'load');
+    } 
+    if(!$object && empty($form_state['values']['skip-new'])) {
+      $object = import_invoke_object($object_type, $row, 'create');
     }
-    import_invoke_importapi($node, $row);
-    node_save($node);
+    import_invoke_merge($object_type, $object, $row);
+    import_invoke_save($object_type, $object);
   }
   drupal_set_message('Imported!', 'status', FALSE);
 }
 
-function import_get_field_keys_value($values) {
+/*
+ * Load information about modules
+ */
+function import_invoke_info() {
+  $info = array();
+  $hook = 'import_info';
+  foreach (module_implements($hook) as $name) {
+    $function = $name .'_'. $hook;
+    $info[] = $function();
+  }
+  return $info;
+}
+
+/*
+ * Save an object
+ */
+function import_invoke_save($object_type, $object) {
+  $hook = 'import_save';
+  foreach (module_implements($hook) as $name) {
+    $function = $name .'_'. $hook;
+    $function($object_type, $object);
+  }
+}
+
+/*
+ * Merge the data with the object
+ */
+function import_invoke_merge(&$object, $data) {
+  $hook = 'import_merge';
+  foreach (module_implements($hook) as $name) {
+    $function = $name .'_'. $hook;
+    $function($object, $data);
+  }
+}
+
+/*
+ * Load or create a new object
+ */
+function import_invoke_object($object_type, $data, $op) {
+  $hook = 'import_object';//TODO: consider refactoring this hook
+  foreach (module_implements($hook) as $name) {
+    $function = $name .'_'. $hook;
+    $object = $function($object_type, $data, $op);
+    if(!empty($$object)){
+      return $object;
+    }
+  } 
+  return FALSE;
+}
+
+function _import_get_form_field_keys_value($values) {
   $keys = array();
   for($i = 0; $i < count(import_file_to_array($values['file'], 'header')); $i++) {
     $field = $values['field-'. $i];
@@ -191,62 +243,20 @@ function import_get_field_keys_value($values) {
   return $keys;
 }
 
-/**
- * @param string $file. The full path of the file from web root. 
- * @param string $op. Operation performed for this request: header, skip-header, list  
- * @param int $limit. How many rows. Zero for all.
- * @param array $filter. If an array of keys are supplied the other columns are discarded.
- * @return array $rows. A nested array of rows and colums.
- */
-function import_file_to_array($file, $op = 'list', $limit = 0, $filter = array()) {
-  set_time_limit(0);
-  $rows = array();
-  if(file_exists($file) && !is_dir($file)){
-    drupal_set_message('Opened file: '. $file, 'status', FALSE);
-    $handle = fopen($file, "r");
-    while (($data = fgetcsv($handle)) !== FALSE) {
-      if(!empty($filter)) {
-        $data = array_intersect_key($data, $filter);
-      }
-      if($op == 'header'){
-        $rows = _import_tidy_data($data);
-        break;
-      }
-      elseif($op == 'skip-header') {
-        $op = 'list';
-      }
-      else{
-        if(!empty($data)){
-          $rows[] = _import_tidy_data($data);
-          if($limit > 0 && count($rows) == $limit) {
-            break;
-          }
-        }
-      }
-    }
-    fclose($handle);
+function _import_get_keys() {
+  foreach(import_invoke_info() as $keys) {
+    
   }
-  else{
-    drupal_set_message('File does not exist.', 'error');
-    return FALSE;
-  }
-  return $rows;
+  return $keys;
 }
 
-function import_get_files($mask = 'csv') {
-  foreach(file_scan_directory(import_get_file_path(), $mask) as $file){
-    $files[] = $file;
-  }
-  return $files; 
+function _import_get_object_types() {
+  return array_keys(import_invoke_info());
 }
 
-function import_get_file_path($basename = FALSE) {
-  $path = variable_get('import_csv_path', 'sites/default/files/csv');
-  $file = !$basename ? $path : $path . '/'. $basename;
-  if(!is_dir($path) || ($basename && !file_exists($file))) {
-    return false;
-  }
-  return $file;
+function _import_get_fields() {
+  $info = import_invoke_info();
+  return $info['fields'];
 }
 
 function _import_tidy_data($data) {

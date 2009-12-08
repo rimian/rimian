@@ -10,24 +10,23 @@ class ImportNodeTestCase extends DrupalWebTestCase {
     );
   }
   
+  function tearDown() {
+    parent::tearDown();
+  }
+  
   public function setUp() {
-    parent::setUp('import');
-    parent::setUp('import node');
+    parent::setUp('import', 'import_node');
     $privileged_user = $this->drupalCreateUser(array('import content'));
     $this->drupalLogin($privileged_user);
-  
-    $settings = array();
-    $this->drupalCreateNode($settings);
   }
   
-  public function testNodeLoad() {
-    $key = 'nid';
-    $node = $this->drupalCreateNode();
-    $data = array(
-      'title' => $this->randomName(32),
-    );
-    
+  public function testSaveLoad() {
+    $data = array('nid' => rand(1, 99), 'title' => $this->randomName(32));
+    $object_type = 'node';
+    $node = import_invoke_object($object_type, $data, 'create');
+    import_invoke_merge($object_type, $node, $data);
+    import_invoke_save($object_type, $node);
+    $node = node_load($data['nid']);  
+    $this->assertEqual($data['title'], $node->title);
   }
-  
-  
 }
