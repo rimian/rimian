@@ -1,5 +1,12 @@
 <?php
+/**
+ * @file
+ * Importing nodes is done here 
+ */
 
+/**
+ * Implement hook_import_info()
+ */
 function import_node_import_info() {
   global $user;
   $language = language_default();
@@ -18,14 +25,18 @@ function import_node_import_info() {
       'promote' => 'Promoted',
     ),
     'defaults' => array(
-      'type' => variabe_get('import_node_default_node_type', 'page'),
+      'type' => variable_get('import_node_default_node_type', 'page'),
       'language' => $language->language,
       'uid' => $user->uid,
       'name' => $user->name, 
     ),
   );
+  return $info;
 }
 
+/**
+ * Implement hook_merge()
+ */
 function import_node_merge(&$object, $data) {
   $info = import_node_import_info();
   if($object_type == 'node'){
@@ -35,6 +46,9 @@ function import_node_merge(&$object, $data) {
   }
 }
 
+/**
+ * Implement hook_object_save()
+ */
 function import_node_object_save($object_type, $object) {
   if($object_type == 'node'){
     node_save($object);

@@ -6,9 +6,13 @@
  * An import API that grabs data from a file and delegates to other module
  * for merging with objects such as nodes, users of taxonomy terms.
  * 
- * Written by Rimian Perkins: http://www.rimian.com.au
+ * Written by Rimian Perkins
+ * @see http://www.rimian.com.au
+ * @see http://drupal.org/user/96072
  * Released under GNU LESSER GENERAL PUBLIC LICENSE
+ * @see http://drupal.org/LICENSE.txt
  * Please buy me beer if you use this module and happen to be around when I am drinking a beer
+ * @see http://www.coopers.com.au
  */
 
 include('import.file.inc');
@@ -193,14 +197,17 @@ function import_form_fields_submit($form, &$form_state) {
 }
 
 /**
- * Load information about modules
+ * Load information about contributed modules
+ * @return array 
  */
 function import_invoke_info() {
   $info = array();
   $hook = 'import_info';
-  foreach (module_implements($hook) as $name) {
-    $function = $name .'_'. $hook;
-    $info[] = $function();
+  foreach (module_implements($hook) as $module) {
+    $module_info = call_user_func($module .'_'. $hook);
+    if (isset($info) && is_array($info)) {
+      $info = array_merge($info, $module_info);
+    }
   }
   return $info;
 }
@@ -229,6 +236,9 @@ function import_invoke_merge(&$object, $data) {
 
 /**
  * Load or create a new object
+ * @param string $object_type
+ * @param $data
+ * @param string $op
  */
 function import_invoke_object($object_type, $data, $op) {
   $hook = 'import_object';//TODO: consider refactoring this hook
@@ -254,14 +264,16 @@ function _import_get_form_field_keys_value($values) {
 }
 
 function _import_get_keys() {
-  foreach(import_invoke_info() as $keys) {
-    
+  $keys = array();
+  foreach(import_invoke_info() as $info) {
+    $keys = array_merge($keys, array_combine($info['keys'], $info['keys'])); 
   }
   return $keys;
 }
 
 function _import_get_object_types() {
-  return array_keys(import_invoke_info());
+  $types = array_keys(import_invoke_info());
+  return array_combine($types, $types);
 }
 
 function _import_get_fields() {
