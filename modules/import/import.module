@@ -1,5 +1,11 @@
 <?php
-/*
+/**
+ * 
+ * @file
+ * 
+ * An import API that grabs data from a file and delegates to other module
+ * for merging with objects such as nodes, users of taxonomy terms.
+ * 
  * Written by Rimian Perkins: http://www.rimian.com.au
  * Released under GNU LESSER GENERAL PUBLIC LICENSE
  * Please buy me beer if you use this module and happen to be around when I am drinking a beer
@@ -122,7 +128,7 @@ function import_preview_rows($file, $limit) {
   return theme('table', $header, $rows, array('style' => 'font-size: 0.8em;'));
 }
 
-/*
+/**
  * Form alter this one to add fields to the CSV import
  */
 function import_form_file_fields($form_state) {
@@ -162,7 +168,11 @@ function import_form_fields($form_state) {
   return $form;
 }
 
+/**
+ * Implement hook_submit
+ */
 function import_form_fields_submit($form, &$form_state) {
+  //TODO: factor out implementation and delegate 
   $limit = variable_get('import_row_limit', 0);
   $fields = _import_get_form_field_keys_value($form_state['values']);
   $rows = import_file_to_array($form_state['values']['file'], 'skip-header', $limit, $fields);
@@ -182,7 +192,7 @@ function import_form_fields_submit($form, &$form_state) {
   drupal_set_message('Imported!', 'status', FALSE);
 }
 
-/*
+/**
  * Load information about modules
  */
 function import_invoke_info() {
@@ -195,7 +205,7 @@ function import_invoke_info() {
   return $info;
 }
 
-/*
+/**
  * Save an object
  */
 function import_invoke_save($object_type, $object) {
@@ -206,8 +216,8 @@ function import_invoke_save($object_type, $object) {
   }
 }
 
-/*
- * Merge the data with the object
+/**
+ * Merge the imported data with the object
  */
 function import_invoke_merge(&$object, $data) {
   $hook = 'import_merge';
@@ -217,7 +227,7 @@ function import_invoke_merge(&$object, $data) {
   }
 }
 
-/*
+/**
  * Load or create a new object
  */
 function import_invoke_object($object_type, $data, $op) {
