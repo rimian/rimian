@@ -8,9 +8,8 @@
  * Implement hook_import_info()
  */
 function import_node_import_info() {
-  global $user;
-  $language = language_default();
-  $info['node'] = array(
+  $info = array(
+    'type' => 'node',
     'keys' => array(
       'nid' => 'Node Id',
       'title' => 'Title',
@@ -24,34 +23,58 @@ function import_node_import_info() {
       'sticky' => 'Sticky',
       'promote' => 'Promoted',
     ),
-    'defaults' => array(
-      'type' => variable_get('import_node_default_node_type', 'page'),
-      'language' => $language->language,
-      'uid' => $user->uid,
-      'name' => $user->name, 
-    ),
   );
   return $info;
 }
 
 /**
- * Implement hook_merge()
+ * Implement hook_import_object()
  */
-function import_node_merge(&$object, $data) {
-  $info = import_node_import_info();
+function import_node_import_object($object_type, $data, $op) {
+  if($object_type == 'node') {
+    switch($op) {
+      case 'create':
+        return import_node_node_defaults();
+      case 'load':
+      	return node_load(array($data['key'] => $data['value']));
+    }  
+  }
+}
+
+/**
+ * Implement hook_import_merge()
+ */
+function import_node_import_merge($object_type, &$object, $data) {
   if($object_type == 'node'){
-    foreach(array_keys($info['node']['fields']) as $key) {
-      $object->$key = $data[$key];
+    foreach($data as $key => $value) {
+      $object->$key = $value;
     }
   }
 }
 
 /**
- * Implement hook_object_save()
+ * Implement hook_import_save()
  */
-function import_node_object_save($object_type, $object) {
+function import_node_import_save($object_type, $object) {
   if($object_type == 'node'){
-    node_save($object);
+    return node_save($object);
   }
+}
+
+/**
+ * Create a default node 
+ * @return object $node 
+ */
+function import_node_node_defaults() {
+  global $user;
+  $language = language_default();
+  $node = new stdClass;
+  $node->vid = NULL;
+  $node->type = variable_get('import_node_default_node_type', 'page');
+  $node->language = $language->language;
+  $node->uid = $user->uid;
+  $node->name = $user->name;
+  $node->taxonomy = array();
+  return $node;
 }
 

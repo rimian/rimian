@@ -46,15 +46,20 @@ function import_perm() {
   return array('import content');
 }
 
+/**
+ * The first form. Choose a file and work flow options. 
+ */
 function import_form($form_state) {
   $file = $form_state['post']['file'];
   $form = array();
   
+  $info = import_get_info();
+
   $options = array();
   foreach(import_get_files() as $file_object) {
     $options[$file_object->filename] = $file_object->basename;
   }
-  
+
   $form['files'] = array(
     '#type' => 'fieldset',
     '#title' => 'Files',
@@ -67,16 +72,16 @@ function import_form($form_state) {
   );
   $form['type'] = array(
     '#type' => 'select',
-    '#title' => t('Load or Create Object Type'),
-    '#description' => 'This is the type of object that gets loaded or created with the import data. It could be a node, user or taxonomy term',
-    '#options' => _import_get_object_types(),
+    '#title' => t('Object Type'),
+    '#description' => 'This is the type of object that gets loaded or created with the import data',
+    '#options' => _import_form_options($info['types']),
   );
   $form['key'] = array(
     '#type' => 'select',
     '#title' => 'Update Key',
-    '#description' => 'Load and update items matching this key.',
+    '#description' => 'Load and update objects matching this key.',
     '#default_value' => variable_get('import_default_key', ''),
-    '#options' => array('<none>') + _import_get_keys(),
+    '#options' => _import_form_options($info['keys'], array('<none>')),
   );
   //TODO: hook workflow
   $form['workflow'] = array(
@@ -84,26 +89,18 @@ function import_form($form_state) {
     '#title' => 'Work Flow',
     '#collapsible' => TRUE,
   );
-  $form['workflow']['skip-new'] = array(
+  $form['workflow']['create-new'] = array(
     '#type' => 'checkbox',
-    '#title' => 'Skip new rows',
-    '#description' => 'Skip rows that are not matched with the above ' . $form['key']['#title'],
-    '#default_value' => variable_get('import_default_skip_new', 0),
+    '#title' => 'Create new data',
+    '#description' => 'Create new objects, if they don\'t exist from the imported data',
+    '#default_value' => variable_get('import_default_create_new', 1),
   );
-  $form['workflow']['skip-existing'] = array(
+  $form['workflow']['overwrite'] = array(
     '#type' => 'checkbox',
-    '#title' => 'Skip existing rows',
-    '#description' => 'Skip rows that match with the above the above ' . $form['key']['#title'],
+    '#title' => 'Overwrite existing objects',
+    '#description' => 'Overwrite existing objects loaded with this data',
     '#default_value' => variable_get('import_default_skip_existing', 0),
   );
-  /*
-  $form['workflow']['new-published'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'Published',
-    '#description' => 'New nodes are set set to Published if this is checked.',
-    '#default_value' => variable_get('import_default_new_published', 1),
-  );
-  */
   $form['preview'] = array(
     '#type' => 'button',
     '#value' => 'Preview File',
@@ -133,33 +130,28 @@ function import_preview_rows($file, $limit) {
 }
 
 /**
- * Form alter this one to add fields to the CSV import
+ * The second form. This matches rows with object info 
  */
-function import_form_file_fields($form_state) {
-  $form['fields'] = array(
-    '#type' => 'select',
-    '#options' => _import_get_fields(),
-  );
-  return $form;
-}
-
 function import_form_fields($form_state) {
-  
-  //expose this to other modules through nested form: 'import_form_file_fields'
-  $file_fields = drupal_retrieve_form('import_form_file_fields', $form_state);
-  drupal_prepare_form('import_form_file_fields', $file_fields, $form_state);
   
   $form = array();
   if(empty($form_state['post']['file'])){
     return $form;
   }
-  foreach(array('file', 'key', 'skip-new', 'skip-existing', 'type', 'new-published') as $hidden) {
+  foreach(array('file', 'key', 'create-new', 'overwrite', 'type', 'new-published') as $hidden) {
     $form[$hidden] = array('#type' => 'hidden', '#value' => $form_state['post'][$hidden],);
   }
+
+  $info = import_get_info($form_state['post']['type']);
+  
   foreach(import_file_to_array($form_state['post']['file'], 'header') as $key => $col) {
     if(!empty($col)) {
       $do_it = TRUE;
-      $form['field-'.$key] = $file_fields['fields'];
+      $form['field-'.$key] = array(
+        '#title' => $col,
+        '#type' => 'select',
+        '#options' => array('Ignore') + $info['fields'],
+      );
       $form['field-'.$key]['#title'] = $col;
     }
   }
@@ -173,41 +165,66 @@ function import_form_fields($form_state) {
 }
 
 /**
- * Implement hook_submit
+ * Implement hook_submit()
  */
 function import_form_fields_submit($form, &$form_state) {
-  //TODO: factor out implementation and delegate 
-  $limit = variable_get('import_row_limit', 0);
+  //TODO: delegate making of rows
+  //TODO: abstract this controller 
   $fields = _import_get_form_field_keys_value($form_state['values']);
-  $rows = import_file_to_array($form_state['values']['file'], 'skip-header', $limit, $fields);
+  $rows = import_file_to_array($form_state['values']['file'], 'skip-header', variable_get('import_row_limit', 0), $fields);
   $object_type = $form_state['values']['type'];
+  $key = $form_state['values']['key'];
   foreach($rows as $row) {
     $row = array_combine($fields, $row);
-    $key = $form_state['values']['key'];
-    if(empty($form_state['values']['skip-existing'])) {
+    if(!empty($key) && !empty($form_state['values']['overwrite'])) {
       $object = import_invoke_object($object_type, array('key' => $key, 'value' => $row[$key]), 'load');
     } 
-    if(!$object && empty($form_state['values']['skip-new'])) {
+    if(!$object && !empty($form_state['values']['create-new'])) {
       $object = import_invoke_object($object_type, $row, 'create');
     }
-    import_invoke_merge($object_type, $object, $row);
-    import_invoke_save($object_type, $object);
+    if(!empty($object)) {
+      //TODO: merge these two hooks into one
+      import_invoke_merge($object_type, $object, $row);
+      import_invoke_save($object_type, $object);
+    }
   }
   drupal_set_message('Imported!', 'status', FALSE);
 }
 
 /**
+ * The interface to import_invoke_info()
+ * @param string $object_type
+ * @return array $info all the info for this type or all types
+ */
+function import_get_info($object_type = NULL) {
+  $info = array(
+    'types' => array(),
+    'keys' => array(),
+    'fields' => array(),
+  );
+  foreach(import_invoke_info() as $module_info) {
+    if(is_null($object_type) || $module_info['type'] == $object_type) {
+      $info['types'][$module_info['type']] = $module_info['type'];
+      $info['keys'] = array_merge($info['keys'], $module_info['keys']);
+      $info['fields'] = array_merge($info['fields'], $module_info['fields']);
+    }
+  }
+  return $info;
+}
+
+/**
  * Load information about contributed modules
+ * 
+ * You should not call this function directly.
+ * @see import_get_object_info()
+ * 
  * @return array 
  */
 function import_invoke_info() {
   $info = array();
   $hook = 'import_info';
   foreach (module_implements($hook) as $module) {
-    $module_info = call_user_func($module .'_'. $hook);
-    if (isset($info) && is_array($info)) {
-      $info = array_merge($info, $module_info);
-    }
+    $info[] = call_user_func($module .'_'. $hook);
   }
   return $info;
 }
@@ -217,20 +234,21 @@ function import_invoke_info() {
  */
 function import_invoke_save($object_type, $object) {
   $hook = 'import_save';
-  foreach (module_implements($hook) as $name) {
-    $function = $name .'_'. $hook;
-    $function($object_type, $object);
+  foreach (module_implements($hook) as $module) {
+    call_user_func($module .'_'. $hook, $object_type, $object);
   }
 }
 
 /**
  * Merge the imported data with the object
+ * @param string $object_type 
+ * @param object $object. A node, user or anything
+ * @param array $data. A data row from the file
  */
-function import_invoke_merge(&$object, $data) {
+function import_invoke_merge($object_type, &$object, $data) {
   $hook = 'import_merge';
-  foreach (module_implements($hook) as $name) {
-    $function = $name .'_'. $hook;
-    $function($object, $data);
+  foreach (module_implements($hook) as $module) {
+    call_user_func($module .'_'. $hook, $object_type, &$object, $data);
   }
 }
 
@@ -242,16 +260,18 @@ function import_invoke_merge(&$object, $data) {
  */
 function import_invoke_object($object_type, $data, $op) {
   $hook = 'import_object';//TODO: consider refactoring this hook
-  foreach (module_implements($hook) as $name) {
-    $function = $name .'_'. $hook;
-    $object = $function($object_type, $data, $op);
-    if(!empty($$object)){
+  foreach (module_implements($hook) as $module) {
+    $object = call_user_func($module .'_'. $hook, $object_type, $data, $op);
+    if(!empty($object)){
       return $object;
     }
   } 
   return FALSE;
 }
 
+/**
+ * Get the user values for each info key  
+ */
 function _import_get_form_field_keys_value($values) {
   $keys = array();
   for($i = 0; $i < count(import_file_to_array($values['file'], 'header')); $i++) {
@@ -263,22 +283,11 @@ function _import_get_form_field_keys_value($values) {
   return $keys;
 }
 
-function _import_get_keys() {
-  $keys = array();
-  foreach(import_invoke_info() as $info) {
-    $keys = array_merge($keys, array_combine($info['keys'], $info['keys'])); 
+function _import_form_options($options, $first = NULL) {
+  if(is_array($options) && is_array($first)) {
+    $options = $first + $options;
   }
-  return $keys;
-}
-
-function _import_get_object_types() {
-  $types = array_keys(import_invoke_info());
-  return array_combine($types, $types);
-}
-
-function _import_get_fields() {
-  $info = import_invoke_info();
-  return $info['fields'];
+  return array_combine($options, $options);
 }
 
 function _import_tidy_data($data) {
@@ -288,4 +297,5 @@ function _import_tidy_data($data) {
   }
   return $tidy_data;
 }
+
 

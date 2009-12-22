@@ -21,12 +21,24 @@ class ImportNodeTestCase extends DrupalWebTestCase {
   }
   
   public function testSaveLoad() {
+
     $data = array('nid' => rand(1, 99), 'title' => $this->randomName(32));
     $object_type = 'node';
+
     $node = import_invoke_object($object_type, $data, 'create');
+    $this->assertTrue(is_object($node));
+
     import_invoke_merge($object_type, $node, $data);
-    import_invoke_save($object_type, $node);
-    $node = node_load($data['nid']);  
     $this->assertEqual($data['title'], $node->title);
+    
+    $this->assertFalse(isset($node->created));
+    import_invoke_save($object_type, $node);
+    $this->assertTrue(isset($node->created));
+    
+    //$this->assertEqual($data['title'], $node->title);
+    
+    //$node = node_load($data['nid']);  
+    //$this->assertEqual($data['title'], $node->title);
+    
   }
 }
