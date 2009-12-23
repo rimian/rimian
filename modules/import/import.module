@@ -62,7 +62,7 @@ function import_form($form_state) {
 
   $form['files'] = array(
     '#type' => 'fieldset',
-    '#title' => 'Files',
+    '#title' => t('Files'),
     '#collapsible' => TRUE,
     '#description' => 'Your import path is: ' . import_get_file_path(),
   );
@@ -78,37 +78,37 @@ function import_form($form_state) {
   );
   $form['key'] = array(
     '#type' => 'select',
-    '#title' => 'Update Key',
+    '#title' => t('Update Key'),
     '#description' => 'Load and update objects matching this key.',
     '#default_value' => variable_get('import_default_key', ''),
-    '#options' => _import_form_options($info['keys'], array('<none>')),
+    '#options' => array('<none>') + $info['keys'],
   );
   //TODO: hook workflow
   $form['workflow'] = array(
     '#type' => 'fieldset',
-    '#title' => 'Work Flow',
+    '#title' => t('Work Flow'),
     '#collapsible' => TRUE,
   );
   $form['workflow']['create-new'] = array(
     '#type' => 'checkbox',
-    '#title' => 'Create new data',
+    '#title' => t('Create new data'),
     '#description' => 'Create new objects, if they don\'t exist from the imported data',
     '#default_value' => variable_get('import_default_create_new', 1),
   );
   $form['workflow']['overwrite'] = array(
     '#type' => 'checkbox',
-    '#title' => 'Overwrite existing objects',
+    '#title' => t('Overwrite existing objects'),
     '#description' => 'Overwrite existing objects loaded with this data',
     '#default_value' => variable_get('import_default_skip_existing', 0),
   );
   $form['preview'] = array(
     '#type' => 'button',
-    '#value' => 'Preview File',
+    '#value' => t('Preview File'),
     '#submit' => 'import_preview_rows',
   );
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => 'Next',
+    '#value' => t('Next'),
     '#attributes' => array('onclick' => '
       var form = document.getElementById(\'import-form\');
       form.action = \'import/fields\';
@@ -158,7 +158,7 @@ function import_form_fields($form_state) {
   if($do_it) {
     $form['submit'] = array(
       '#type' => 'submit',
-      '#value' => 'Do it',
+      '#value' => t('Do it'),
     );
   }
   return $form;
