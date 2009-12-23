@@ -168,7 +168,7 @@ function import_form_fields($form_state) {
  * Implement hook_submit()
  */
 function import_form_fields_submit($form, &$form_state) {
-  //TODO: delegate making of rows
+  //TODO: delegate making of rows?
   //TODO: abstract this controller 
   $fields = _import_get_form_field_keys_value($form_state['values']);
   $rows = import_file_to_array($form_state['values']['file'], 'skip-header', variable_get('import_row_limit', 0), $fields);
@@ -186,7 +186,6 @@ function import_form_fields_submit($form, &$form_state) {
     if(!empty($object)) {
       import_invoke_merge($object_type, $object, $row);
       import_invoke_save($object_type, $object);
-      //kpr($object);
     }
   }
   drupal_set_message('Imported!', 'status', FALSE);
