@@ -176,6 +176,7 @@ function import_form_fields_submit($form, &$form_state) {
   $key = $form_state['values']['key'];
   foreach($rows as $row) {
     $row = array_combine($fields, $row);
+    $object = NULL;
     if(!empty($key) && !empty($form_state['values']['overwrite'])) {
       $object = import_invoke_object($object_type, array('key' => $key, 'value' => $row[$key]), 'load');
     } 
@@ -183,9 +184,9 @@ function import_form_fields_submit($form, &$form_state) {
       $object = import_invoke_object($object_type, $row, 'create');
     }
     if(!empty($object)) {
-      //TODO: merge these two hooks into one
       import_invoke_merge($object_type, $object, $row);
       import_invoke_save($object_type, $object);
+      //kpr($object);
     }
   }
   drupal_set_message('Imported!', 'status', FALSE);
