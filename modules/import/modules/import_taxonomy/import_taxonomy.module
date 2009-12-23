@@ -1,0 +1,67 @@
+<?php
+/**
+ * @file
+ * Importing taxonomy data is done here 
+ */
+
+
+/**
+ * Implement hook_import_info()
+ */
+function import_taxonomy_import_info() {
+  $info = array(
+    'type' => 'term',
+    //'keys' => array(
+    //  'tid' => 'Term Id',
+    //  'name' => 'Term Name',
+    //),
+    'fields' => array(
+      'tid' => 'Term Id',
+      'name' => 'Term Name',
+    ),
+  );
+  return $info;
+}
+
+/**
+ * Implement hook_import_object()
+ */
+function import_taxonomy_import_object($object_type, $data, $op) {
+  if($object_type == 'node') {
+    switch($op) {
+      case 'create':
+      case 'load':
+    }  
+  }
+}
+
+/**
+ * Implement hook_import_merge()
+ */
+function import_taxonomy_import_merge($object_type, &$object, $data) {
+  if($object_type == 'term'){
+    foreach($data as $key => $value) {
+    }
+  }
+}
+
+/**
+ * Implement hook_import_save()
+ */
+function import_taxonomy_import_save($object_type, &$object) {
+  if($object_type == 'term'){
+  
+  }
+}
+
+/**
+ * Create a default node 
+ * @return object $term 
+ */
+function import_taxonomy_term_defaults() {
+
+}
+
+
+
+

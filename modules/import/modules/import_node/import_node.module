@@ -23,8 +23,20 @@ function import_node_import_info() {
       'sticky' => 'Sticky',
       'promote' => 'Promoted',
     ),
+    'workflow' => array(
+      'fields' => import_node_workflow_fields(),
+      'callbacks' => '',
+    ),
   );
   return $info;
+}
+
+/**
+ * Form elements for the work flow
+ * @return array $form
+ */
+function import_node_workflow_fields() {
+  
 }
 
 /**

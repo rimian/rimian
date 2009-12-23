@@ -89,6 +89,7 @@ function import_form($form_state) {
     '#title' => 'Work Flow',
     '#collapsible' => TRUE,
   );
+  
   $form['workflow']['create-new'] = array(
     '#type' => 'checkbox',
     '#title' => 'Create new data',
@@ -201,12 +202,14 @@ function import_get_info($object_type = NULL) {
     'types' => array(),
     'keys' => array(),
     'fields' => array(),
+    'workflow' => array(),
   );
   foreach(import_invoke_info() as $module_info) {
     if(is_null($object_type) || $module_info['type'] == $object_type) {
       $info['types'][$module_info['type']] = $module_info['type'];
-      $info['keys'] = array_merge($info['keys'], $module_info['keys']);
-      $info['fields'] = array_merge($info['fields'], $module_info['fields']);
+      if(is_array($module_info['keys'])) $info['keys'] = array_merge($info['keys'], $module_info['keys']);
+      if(is_array($module_info['fields'])) $info['fields'] = array_merge($info['fields'], $module_info['fields']);
+      //$info['workflow'] = array_merge($info['workflow'], $module_info['workflow']);
     }
   }
   return $info;

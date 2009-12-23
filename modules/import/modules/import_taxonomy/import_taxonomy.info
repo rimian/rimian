@@ -1,0 +1,5 @@
+name = Import Taxonomy
+description = Imports taxonomy data.
+package = Import
+core = 6.x
+dependencies[] = import
