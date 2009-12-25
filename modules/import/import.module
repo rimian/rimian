@@ -55,9 +55,9 @@ function import_form($form_state) {
   
   $info = import_get_info();
 
-  $options = array();
+  $file_options = array();
   foreach(import_get_files() as $file_object) {
-    $options[$file_object->filename] = $file_object->basename;
+    $file_options[$file_object->filename] = $file_object->basename;
   }
 
   $form['files'] = array(
@@ -68,7 +68,7 @@ function import_form($form_state) {
   );
   $form['files']['file'] = array(
     '#type' => 'radios',
-    '#options' => $options,
+    '#options' => $file_options,
   );
   $form['type'] = array(
     '#type' => 'select',
@@ -83,13 +83,11 @@ function import_form($form_state) {
     '#default_value' => variable_get('import_default_key', ''),
     '#options' => _import_form_options($info['keys'], array('<none>')),
   );
-  //TODO: hook workflow
   $form['workflow'] = array(
     '#type' => 'fieldset',
     '#title' => 'Work Flow',
     '#collapsible' => TRUE,
   );
-  
   $form['workflow']['create-new'] = array(
     '#type' => 'checkbox',
     '#title' => 'Create new data',
@@ -175,17 +173,17 @@ function import_form_fields_submit($form, &$form_state) {
   $rows = import_file_to_array($form_state['values']['file'], 'skip-header', variable_get('import_row_limit', 0), $fields);
   $object_type = $form_state['values']['type'];
   $key = $form_state['values']['key'];
-  foreach($rows as $row) {
-    $row = array_combine($fields, $row);
+  foreach($rows as $data) {
+    $data = array_combine($fields, $data);
     $object = NULL;
     if(!empty($key) && !empty($form_state['values']['overwrite'])) {
-      $object = import_invoke_object($object_type, array('key' => $key, 'value' => $row[$key]), 'load');
+      $object = import_invoke_object($object_type, array('key' => $key, 'value' => $data[$key]), 'load');
     } 
     if(!$object && !empty($form_state['values']['create-new'])) {
-      $object = import_invoke_object($object_type, $row, 'create');
+      $object = import_invoke_object($object_type, $data, 'create');
     }
     if(!empty($object)) {
-      import_invoke_merge($object_type, $object, $row);
+      import_invoke_merge($object_type, $object, $data);
       import_invoke_save($object_type, $object);
     }
   }
@@ -206,10 +204,11 @@ function import_get_info($object_type = NULL) {
   );
   foreach(import_invoke_info() as $module_info) {
     if(is_null($object_type) || $module_info['type'] == $object_type) {
+      //TODO: eeeww!
       $info['types'][$module_info['type']] = $module_info['type'];
       if(is_array($module_info['keys'])) $info['keys'] = array_merge($info['keys'], $module_info['keys']);
       if(is_array($module_info['fields'])) $info['fields'] = array_merge($info['fields'], $module_info['fields']);
-      //$info['workflow'] = array_merge($info['workflow'], $module_info['workflow']);
+      if(is_array($module_info['workflow'])) $info['workflow'] = array_merge($info['workflow'], $module_info['workflow']);
     }
   }
   return $info;

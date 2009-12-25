@@ -11,10 +11,10 @@
 function import_taxonomy_import_info() {
   $info = array(
     'type' => 'term',
-    //'keys' => array(
-    //  'tid' => 'Term Id',
-    //  'name' => 'Term Name',
-    //),
+    'keys' => array(
+      'tid' => 'Term Id',
+      'name' => 'Term Name',
+    ),
     'fields' => array(
       'tid' => 'Term Id',
       'name' => 'Term Name',
@@ -27,10 +27,23 @@ function import_taxonomy_import_info() {
  * Implement hook_import_object()
  */
 function import_taxonomy_import_object($object_type, $data, $op) {
-  if($object_type == 'node') {
+  if($object_type == 'term') {
     switch($op) {
       case 'create':
+      	$term = new stdClass;
+        $term->vid = 1;//testing 
+        $term->name = '';
+        $term->description = '';
+        $term->weight = 0;
+        return $term;
+        	    
       case 'load':
+        switch($data['key']) {
+          case 'tid':
+            return taxonomy_get_term($data['value']);
+          case 'name':
+            return taxonomy_get_term_by_name($data['value']);
+      }
     }  
   }
 }
@@ -41,6 +54,7 @@ function import_taxonomy_import_object($object_type, $data, $op) {
 function import_taxonomy_import_merge($object_type, &$object, $data) {
   if($object_type == 'term'){
     foreach($data as $key => $value) {
+      $object->$key = $value;
     }
   }
 }
@@ -48,19 +62,15 @@ function import_taxonomy_import_merge($object_type, &$object, $data) {
 /**
  * Implement hook_import_save()
  */
-function import_taxonomy_import_save($object_type, &$object) {
+function import_taxonomy_import_save($object_type, $object) {
   if($object_type == 'term'){
-  
+    $term = (array) $object;
+    taxonomy_save_term($term);
   }
 }
 
-/**
- * Create a default node 
- * @return object $term 
- */
-function import_taxonomy_term_defaults() {
 
-}
+
 
 
 
