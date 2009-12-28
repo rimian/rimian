@@ -1,8 +1,0 @@
-<?php
-
-function import_install() {
-}
-
-function import_uninstall() {
-}
-

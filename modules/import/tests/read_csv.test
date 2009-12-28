@@ -7,19 +7,19 @@ class ImportDataTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'Import',
+      'name' => 'Import Merge',
       'description' => 'Ensure that the import module reads datafiles and converts them correctly.',
       'group' => 'Import',
     );
   }
   
   public function setUp() {
-    parent::setUp('import');
+    parent::setUp('import_merge');
     $privileged_user = $this->drupalCreateUser(array('import content'));
     $this->drupalLogin($privileged_user);
   
     //resources for this test.
-    $this->path = drupal_get_path('module', 'import') . '/tests';
+    $this->path = drupal_get_path('module', 'import_merge') . '/tests';
     $this->file = 'test.csv';// It's a real file!
     variable_set('import_csv_path', $this->path);
   }
@@ -31,32 +31,32 @@ class ImportDataTestCase extends DrupalWebTestCase {
   public function testGetCSV() {
     $this->assertTrue(file_exists($this->path.'/'.$this->file), 'File exists', 'File');
     $this->assertTrue(is_dir($this->path), 'Is directory', 'File');
-    $this->assertEqual(import_get_file_path(), is_dir($this->path), 'Directory Exists', 'File');
-    $this->assertEqual(import_get_file_path($this->file), file_exists($this->path.'/'.$this->file), 'File '. $this->file .' Exists', 'File');
+    $this->assertEqual(import_merge_get_file_path(), is_dir($this->path), 'Directory Exists', 'File');
+    $this->assertEqual(import_merge_get_file_path($this->file), file_exists($this->path.'/'.$this->file), 'File '. $this->file .' Exists', 'File');
   }
   
   public function testBadFiles() {
     // === operator is used because array() == FALSE !
-    $this->assertTrue(import_get_file_path('file-no-exist.bummer') === FALSE, 'File not exist returns false', 'File');
-    $this->assertTrue(import_file_to_array(FALSE) === FALSE, 'Convert no file to FALSE', 'File');
+    $this->assertTrue(import_merge_get_file_path('file-no-exist.bummer') === FALSE, 'File not exist returns false', 'File');
+    $this->assertTrue(import_merge_file_to_array(FALSE) === FALSE, 'Convert no file to FALSE', 'File');
     variable_set('import_csv_path', '/path/does/not/exist');
-    $this->assertTrue(import_get_file_path() === FALSE, 'Directory not exist returns false', 'File');
+    $this->assertTrue(import_merge_get_file_path() === FALSE, 'Directory not exist returns false', 'File');
   }
   
   //convert example CSV to an array
   public function testConvertFiletoArray() {
-    $file = import_get_file_path($this->file);
+    $file = import_merge_get_file_path($this->file);
     $expected = array(
       array('Col 1', 'Col 2', 'Col 3'),
       array('Cindy', 'Bobby', 'Alice'),
       array('Jan', 'Greg', 'Mum'),
       array('Marsha', 'Peter', 'Dad'),
     );
-    $this->assertEqual($expected, import_file_to_array($file), 'CSV converted to exptected array', 'File');
-    $this->assertEqual($expected[0], import_file_to_array($file, 'header'), 'CSV got 1st Row', 'File');
-    $this->assertEqual(array_slice($expected, 1), import_file_to_array($file, 'skip-header'), 'CSV got rows and skipped header', 'File');
-    $this->assertEqual(array_slice($expected, 0, -1), import_file_to_array($file, 'list', count($expected) - 1), 'CSV got N rows', 'File');
-    $this->assertEqual(array_slice($expected, 1, -1), import_file_to_array($file, 'skip-header', count($expected) - 2), 'CSV got N rows and skipped header', 'File');
+    $this->assertEqual($expected, import_merge_file_to_array($file), 'CSV converted to exptected array', 'File');
+    $this->assertEqual($expected[0], import_merge_file_to_array($file, 'header'), 'CSV got 1st Row', 'File');
+    $this->assertEqual(array_slice($expected, 1), import_merge_file_to_array($file, 'skip-header'), 'CSV got rows and skipped header', 'File');
+    $this->assertEqual(array_slice($expected, 0, -1), import_merge_file_to_array($file, 'list', count($expected) - 1), 'CSV got N rows', 'File');
+    $this->assertEqual(array_slice($expected, 1, -1), import_merge_file_to_array($file, 'skip-header', count($expected) - 2), 'CSV got N rows and skipped header', 'File');
   }
   
   

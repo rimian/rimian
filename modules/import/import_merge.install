@@ -1,0 +1,8 @@
+<?php
+
+function import_merge_install() {
+}
+
+function import_merge_uninstall() {
+}
+

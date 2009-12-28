@@ -4,7 +4,7 @@ class ImportNodeTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'Import Node',
+      'name' => 'Import Merge Node',
       'description' => 'Test Node update and save with workflow',
       'group' => 'Import',
     );
@@ -15,7 +15,7 @@ class ImportNodeTestCase extends DrupalWebTestCase {
   }
   
   public function setUp() {
-    parent::setUp('import', 'import_node');
+    parent::setUp('import_merge', 'import_merge_node');
     $privileged_user = $this->drupalCreateUser(array('import content'));
     $this->drupalLogin($privileged_user);
   }
@@ -25,20 +25,15 @@ class ImportNodeTestCase extends DrupalWebTestCase {
     $data = array('nid' => rand(1, 99), 'title' => $this->randomName(32));
     $object_type = 'node';
 
-    $node = import_invoke_object($object_type, $data, 'create');
+    $node = import_merge_invoke_object($object_type, $data, 'create');
     $this->assertTrue(is_object($node));
 
-    import_invoke_merge($object_type, $node, $data);
+    import_merge_invoke_merge($object_type, $node, $data);
     $this->assertEqual($data['title'], $node->title);
     
     $this->assertFalse(isset($node->created));
-    import_invoke_save($object_type, $node);
+    import_merge_invoke_save($object_type, $node);
     $this->assertTrue(isset($node->created));
-    
-    //$this->assertEqual($data['title'], $node->title);
-    
-    //$node = node_load($data['nid']);  
-    //$this->assertEqual($data['title'], $node->title);
     
   }
 }

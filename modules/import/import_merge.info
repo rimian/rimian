@@ -1,0 +1,4 @@
+name = Import Merge
+description = Imports data and merges with Drupal things like nodes or users. Provides hooks for other modules.
+package = Import
+core = 6.x

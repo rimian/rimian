@@ -6,9 +6,9 @@
 
 
 /**
- * Implement hook_import_info()
+ * Implement hook_import_merge_info()
  */
-function import_taxonomy_import_info() {
+function import_merge_taxonomy_import_merge_info() {
   $info = array(
     'type' => 'term',
     'keys' => array(
@@ -24,9 +24,9 @@ function import_taxonomy_import_info() {
 }
 
 /**
- * Implement hook_import_object()
+ * Implement hook_import_merge_object()
  */
-function import_taxonomy_import_object($object_type, $data, $op) {
+function import_merge_taxonomy_import_merge_object($object_type, $data, $op) {
   if($object_type == 'term') {
     switch($op) {
       case 'create':
@@ -49,9 +49,9 @@ function import_taxonomy_import_object($object_type, $data, $op) {
 }
 
 /**
- * Implement hook_import_merge()
+ * Implement hook_import_merge_merge()
  */
-function import_taxonomy_import_merge($object_type, &$object, $data) {
+function import_merge_taxonomy_import_merge_merge($object_type, &$object, $data) {
   if($object_type == 'term'){
     foreach($data as $key => $value) {
       $object->$key = $value;
@@ -60,9 +60,9 @@ function import_taxonomy_import_merge($object_type, &$object, $data) {
 }
 
 /**
- * Implement hook_import_save()
+ * Implement hook_import_merge_save()
  */
-function import_taxonomy_import_save($object_type, $object) {
+function import_merge_taxonomy_import_merge_save($object_type, $object) {
   if($object_type == 'term'){
     $term = (array) $object;
     taxonomy_save_term($term);

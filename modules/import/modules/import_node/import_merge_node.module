@@ -5,9 +5,9 @@
  */
 
 /**
- * Implement hook_import_info()
+ * Implement hook_import_merge_info()
  */
-function import_node_import_info() {
+function import_merge_node_import_merge_info() {
   $info = array(
     'type' => 'node',
     'keys' => array(
@@ -23,30 +23,19 @@ function import_node_import_info() {
       'sticky' => 'Sticky',
       'promote' => 'Promoted',
     ),
-    'workflow' => array(
-      'fields' => import_node_workflow_fields(),
-      'callbacks' => '',
-    ),
   );
   return $info;
 }
 
-/**
- * Form elements for the work flow
- * @return array $form
- */
-function import_node_workflow_fields() {
-  
-}
 
 /**
- * Implement hook_import_object()
+ * Implement hook_import_merge_object()
  */
-function import_node_import_object($object_type, $data, $op) {
+function import_merge_node_import_merge_object($object_type, $data, $op) {
   if($object_type == 'node') {
     switch($op) {
       case 'create':
-        return import_node_node_defaults();
+        return import_merge_node_node_defaults();
       case 'load':
       	return node_load(array($data['key'] => $data['value']));
     }  
@@ -54,9 +43,9 @@ function import_node_import_object($object_type, $data, $op) {
 }
 
 /**
- * Implement hook_import_merge()
+ * Implement hook_import_merge_merge()
  */
-function import_node_import_merge($object_type, &$object, $data) {
+function import_merge_node_import_merge_merge($object_type, &$object, $data) {
   if($object_type == 'node'){
     foreach($data as $key => $value) {
       $object->$key = $value;
@@ -65,9 +54,9 @@ function import_node_import_merge($object_type, &$object, $data) {
 }
 
 /**
- * Implement hook_import_save()
+ * Implement hook_import_merge_save()
  */
-function import_node_import_save($object_type, $object) {
+function import_merge_node_import_merge_save($object_type, $object) {
   if($object_type == 'node'){
     node_save($object);
   }
@@ -77,7 +66,7 @@ function import_node_import_save($object_type, $object) {
  * Create a default node 
  * @return object $node 
  */
-function import_node_node_defaults() {
+function import_merge_node_node_defaults() {
   global $user;
   $language = language_default();
   $node = new stdClass;

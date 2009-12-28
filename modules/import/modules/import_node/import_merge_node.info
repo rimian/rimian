@@ -2,4 +2,4 @@ name = Import Node
 description = Creates or updates a node from data supplied by Import.
 package = Import
 core = 6.x
-dependencies[] = import
+dependencies[] = import_merge

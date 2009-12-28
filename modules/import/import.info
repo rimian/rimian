@@ -1,4 +1,0 @@
-name = Import
-description = Imports node data. Provides hooks for other modules.
-package = Import
-core = 6.x
