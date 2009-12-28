@@ -1,8 +1,10 @@
-Here are my Drupal Modules. Well, there's only one so far.
+Here are my Drupal Modules. 
 
-Import
+Import Merge
 ----------------------------
-Import is a simple API module that loads data from a CSV file and delegates 
-to other modules. 
+Import Merge is a simple API module that loads data from a CSV file and delegates 
+to other modules for merging with nodes, users, taxonomy or what ever you wish. 
+
+Support for nodes and taxonomy terms is included so far.
 
 
