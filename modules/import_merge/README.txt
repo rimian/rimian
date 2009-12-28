@@ -1,7 +1,8 @@
 
 
-A basic API for node importing from a CSV. Other file formats will perhaps
-be supported later. But probably not.
+A basic API for importing various objects from a CSV. Other file formats will perhaps
+be supported later. But probably not. This module assumes you can get your CSV into a manageable
+format with Open Office or something. 
 
 This module doesn't try to do too much. It provides a basic form interface to the end user and
 another application interface to extra modules that wish to extend its functionality. It really only
@@ -10,7 +11,7 @@ matches a few fields to CSV columns and delegates the loading and editing of obj
 Hooks:
 ==============================
 
-hook_import_info()
+hook_im()
 ------------------------------
 This hook tells import about your module. It should return an array with the keys:
 
@@ -24,20 +25,20 @@ return the keys here
 *fields
 The use fields to modify your obkect with the data in the columns. 
 
-See import_node.module
+See import_merge_node.module
 
-hook_import_object($object_type, $data, $op)
+hook_im_init($object_type, $data, $op)
 -----------------------------
 $object_type matches against 'type' provided by your info hook
 $data is the row from your CSV
-$op is the operation being performed. Values are 'create' and 'load'. See import_node.module
+$op is the operation being performed. Values are 'create' and 'load'. See import_merge_node.module
 
-hook_import_merge($object_type, &$object, $data)
+hook_im_merge($object_type, &$object, $data)
 -----------------------------
 Merge the row with the object. The object is passed by reference and modified by they array $data
 This function should not return anything
 
-hook_import_save($object_type, &$object)
+hook_im_save($object_type, &$object)
 -----------------------------
 Save the object. 
 This function should not return anything

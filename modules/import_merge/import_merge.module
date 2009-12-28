@@ -222,34 +222,11 @@ function import_merge_get_info($object_type = NULL) {
  */
 function import_merge_invoke_info() {
   $info = array();
-  $hook = 'import_merge_info';
+  $hook = 'im';
   foreach (module_implements($hook) as $module) {
     $info[] = call_user_func($module .'_'. $hook);
   }
   return $info;
-}
-
-/**
- * Save an object
- */
-function import_merge_invoke_save($object_type, $object) {
-  $hook = 'import_merge_save';
-  foreach (module_implements($hook) as $module) {
-    call_user_func($module .'_'. $hook, $object_type, $object);
-  }
-}
-
-/**
- * Merge the imported data with the object
- * @param string $object_type 
- * @param object $object. A node, user or anything
- * @param array $data. A data row from the file
- */
-function import_merge_invoke_merge($object_type, &$object, $data) {
-  $hook = 'import_merge_merge';
-  foreach (module_implements($hook) as $module) {
-    call_user_func($module .'_'. $hook, $object_type, &$object, $data);
-  }
 }
 
 /**
@@ -259,7 +236,7 @@ function import_merge_invoke_merge($object_type, &$object, $data) {
  * @param string $op
  */
 function import_merge_invoke_object($object_type, $data, $op) {
-  $hook = 'import_merge_object';//TODO: consider refactoring this hook
+  $hook = 'im_init';
   foreach (module_implements($hook) as $module) {
     $object = call_user_func($module .'_'. $hook, $object_type, $data, $op);
     if(!empty($object)){
@@ -267,6 +244,29 @@ function import_merge_invoke_object($object_type, $data, $op) {
     }
   } 
   return FALSE;
+}
+
+/**
+ * Merge the imported data with the object
+ * @param string $object_type 
+ * @param object $object. A node, user or anything
+ * @param array $data. A data row from the file
+ */
+function import_merge_invoke_merge($object_type, &$object, $data) {
+  $hook = 'im_merge';
+  foreach (module_implements($hook) as $module) {
+    call_user_func($module .'_'. $hook, $object_type, &$object, $data);
+  }
+}
+
+/**
+ * Save an object
+ */
+function import_merge_invoke_save($object_type, $object) {
+  $hook = 'im_save';
+  foreach (module_implements($hook) as $module) {
+    call_user_func($module .'_'. $hook, $object_type, $object);
+  }
 }
 
 /**

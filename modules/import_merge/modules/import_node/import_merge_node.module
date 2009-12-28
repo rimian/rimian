@@ -5,9 +5,9 @@
  */
 
 /**
- * Implement hook_import_merge_info()
+ * Implement hook_im()
  */
-function import_merge_node_import_merge_info() {
+function import_merge_node_im() {
   $info = array(
     'type' => 'node',
     'keys' => array(
@@ -29,9 +29,9 @@ function import_merge_node_import_merge_info() {
 
 
 /**
- * Implement hook_import_merge_object()
+ * Implement hook_im_init()
  */
-function import_merge_node_import_merge_object($object_type, $data, $op) {
+function import_merge_node_im_init($object_type, $data, $op) {
   if($object_type == 'node') {
     switch($op) {
       case 'create':
@@ -43,9 +43,9 @@ function import_merge_node_import_merge_object($object_type, $data, $op) {
 }
 
 /**
- * Implement hook_import_merge_merge()
+ * Implement hook_im_merge()
  */
-function import_merge_node_import_merge_merge($object_type, &$object, $data) {
+function import_merge_node_im_merge($object_type, &$object, $data) {
   if($object_type == 'node'){
     foreach($data as $key => $value) {
       $object->$key = $value;
@@ -54,9 +54,9 @@ function import_merge_node_import_merge_merge($object_type, &$object, $data) {
 }
 
 /**
- * Implement hook_import_merge_save()
+ * Implement hook_im_save()
  */
-function import_merge_node_import_merge_save($object_type, $object) {
+function import_merge_node_im_save($object_type, $object) {
   if($object_type == 'node'){
     node_save($object);
   }
