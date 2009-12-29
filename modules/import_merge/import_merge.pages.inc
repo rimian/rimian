@@ -1,5 +1,8 @@
 <?php
 
+include('import_merge.file.inc');
+
+
 /**
  * @file
  * Page callbacks for initializing merge.
@@ -23,7 +26,7 @@ function import_merge_form($form_state) {
     '#type' => 'fieldset',
     '#title' => t('Files'),
     '#collapsible' => TRUE,
-    '#description' => 'Your import path is: ' . import_merge_get_file_path(),
+    '#description' => t('Your import path is: ') . import_merge_get_file_path(),
   );
   $form['files']['file'] = array(
     '#type' => 'radios',
@@ -32,13 +35,13 @@ function import_merge_form($form_state) {
   $form['type'] = array(
     '#type' => 'select',
     '#title' => t('Object Type'),
-    '#description' => 'This is the type of object that gets loaded or created with the import data',
+    '#description' => t('This is the type of object that gets loaded or created with the import data'),
     '#options' => !empty($info['types']) ? array_combine($info['types'], $info['types']) : array(),
   );
   $form['key'] = array(
     '#type' => 'select',
     '#title' => t('Update Key'),
-    '#description' => 'Load and update objects matching this key.',
+    '#description' => t('Load and update objects matching this key.'),
     '#default_value' => variable_get('import_default_key', ''),
     '#options' => array('<none>') + $info['keys'],
   );
@@ -50,13 +53,13 @@ function import_merge_form($form_state) {
   $form['workflow']['create-new'] = array(
     '#type' => 'checkbox',
     '#title' => t('Create new data'),
-    '#description' => 'Create new objects, if they don\'t exist from the imported data',
+    '#description' => t('Create new objects, if they don\'t exist from the imported data'),
     '#default_value' => variable_get('import_default_create_new', 1),
   );
   $form['workflow']['overwrite'] = array(
     '#type' => 'checkbox',
     '#title' => t('Overwrite existing objects'),
-    '#description' => 'Overwrite existing objects loaded with this data',
+    '#description' => t('Overwrite existing objects loaded with this data'),
     '#default_value' => variable_get('import_default_skip_existing', 0),
   );
   $form['preview'] = array(
@@ -152,5 +155,19 @@ function import_merge_form_fields_submit($form, &$form_state) {
   //execute
   import_merge_execute($merge);
   drupal_set_message('Imported!', 'status', FALSE);
+}
+
+/**
+ * Get the user values for each info key  
+ */
+function _import_merge_get_form_field_keys_value($values) {
+  $keys = array();
+  for($i = 0; $i < count(import_merge_file_to_array($values['file'], 'header')); $i++) {
+    $field = $values['field-'. $i];
+    if(!empty($field)) {
+      $keys[$i] = $field;
+    }
+  }
+  return $keys;
 }
 

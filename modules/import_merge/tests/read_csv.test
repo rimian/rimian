@@ -1,5 +1,7 @@
 <?php
 
+include(drupal_get_path('module', 'import_merge') . '/import_merge.file.inc');
+
 class ImportDataTestCase extends DrupalWebTestCase {
 
   private $path;

@@ -15,8 +15,6 @@
  * @see http://www.coopers.com.au
  */
 
-include('import_merge.file.inc');
-
 /**
  * Implement hook_menu() 
  */
@@ -148,7 +146,6 @@ function import_merge_invoke_init($object_type, $data, $op, $meta = NULL) {
  * Merge the imported data with the object
  * @param string $object_type 
  * @param object $object. A node, user or anything
- * @param array $data. A data row from the file
  * @param mixed $meta. Meta Information about this merge operation
  */
 function import_merge_invoke_merge($object_type, &$object, $data, $meta = NULL) {
@@ -168,20 +165,6 @@ function import_merge_invoke_save($object_type, $object) {
   foreach (module_implements($hook) as $module) {
     call_user_func($module .'_'. $hook, $object_type, $object);
   }
-}
-
-/**
- * Get the user values for each info key  
- */
-function _import_merge_get_form_field_keys_value($values) {
-  $keys = array();
-  for($i = 0; $i < count(import_merge_file_to_array($values['file'], 'header')); $i++) {
-    $field = $values['field-'. $i];
-    if(!empty($field)) {
-      $keys[$i] = $field;
-    }
-  }
-  return $keys;
 }
 
 function _import_merge_tidy_data($data) {
