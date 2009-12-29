@@ -167,27 +167,71 @@ function import_merge_form_fields($form_state) {
  * Implement hook_submit()
  */
 function import_merge_form_fields_submit($form, &$form_state) {
-  //TODO: delegate making of rows?
-  //TODO: abstract this controller 
+  
+  //get user join selection and make row data array
   $fields = _import_merge_get_form_field_keys_value($form_state['values']);
-  $rows = import_merge_file_to_array($form_state['values']['file'], 'skip-header', variable_get('import_row_limit', 0), $fields);
-  $object_type = $form_state['values']['type'];
-  $key = $form_state['values']['key'];
-  foreach($rows as $data) {
-    $data = array_combine($fields, $data);
+  $file_data = import_merge_file_to_array($form_state['values']['file'], 'skip-header', variable_get('import_row_limit', 0), $fields);
+  $rows = array();
+  foreach($file_data as $data){
+    $rows[] = array_combine($fields, $data);
+  }
+
+  //get info about contributes module form values
+  $merge_data = array();
+  
+  //create merge object
+  $merge_settings = array(
+    'type' => $form_state['values']['type'],
+    'load' => $form_state['values']['key'],
+    'overwrite' => $form_state['values']['overwrite'],
+    'create' => $form_state['values']['create-new'],
+    'rows' => $rows,
+    'meta' => $merge_data,
+  );
+  $merge = import_merge_merge_object($merge_settings);
+  
+  //execute
+  import_merge_execute($merge);
+  drupal_set_message('Imported!', 'status', FALSE);
+}
+
+/**
+ * Execute merge
+ * @param object $merge
+ */
+function import_merge_execute($merge) {
+  foreach($merge->rows as $row) {
     $object = NULL;
-    if(!empty($key) && !empty($form_state['values']['overwrite'])) {
-      $object = import_merge_invoke_object($object_type, array('key' => $key, 'value' => $data[$key]), 'load');
+    if(!empty($merge->load) && $merge->overwrite) {
+      $object = import_merge_invoke_init($merge->type, array('key' => $merge->load, 'value' => $row[$merge->load]), 'load', $merge->meta);
     } 
-    if(!$object && !empty($form_state['values']['create-new'])) {
-      $object = import_merge_invoke_object($object_type, $data, 'create');
+    if(!$object && $merge->create) {
+      $object = import_merge_invoke_init($merge->type, $row, 'create', $merge->meta);
     }
     if(!empty($object)) {
-      import_merge_invoke_merge($object_type, $object, $data);
-      import_merge_invoke_save($object_type, $object);
+      import_merge_invoke_merge($merge->type, $object, $row, $merge->meta);
+      import_merge_invoke_save($merge->type, $object);
     }
   }
-  drupal_set_message('Imported!', 'status', FALSE);
+}
+
+/**
+ * A merge object. This contains info about the merge and rows
+ * @param array [optional] $settings
+ * @return object $merge
+ */
+function import_merge_merge_object($settings = array()) {
+  $merge = new stdClass;
+  $merge->type = NULL;
+  $merge->load = NULL;
+  $merge->overwrite = FALSE;
+  $merge->create = TRUE;
+  $merge->rows = array();
+  $merge->meta = NULL;
+  foreach($settings as $key => $value) {
+    $merge->$key = $value;
+  }
+  return $merge;
 }
 
 /**
@@ -234,8 +278,9 @@ function import_merge_invoke_info() {
  * @param string $object_type
  * @param $data
  * @param string $op
+ * @param mixed $meta. Meta Information about this merge operation
  */
-function import_merge_invoke_object($object_type, $data, $op) {
+function import_merge_invoke_init($object_type, $data, $op, $meta = NULL) {
   $hook = 'im_init';
   foreach (module_implements($hook) as $module) {
     $object = call_user_func($module .'_'. $hook, $object_type, $data, $op);
@@ -251,16 +296,19 @@ function import_merge_invoke_object($object_type, $data, $op) {
  * @param string $object_type 
  * @param object $object. A node, user or anything
  * @param array $data. A data row from the file
+ * @param mixed $meta. Meta Information about this merge operation
  */
-function import_merge_invoke_merge($object_type, &$object, $data) {
+function import_merge_invoke_merge($object_type, &$object, $data, $meta = NULL) {
   $hook = 'im_merge';
   foreach (module_implements($hook) as $module) {
-    call_user_func($module .'_'. $hook, $object_type, &$object, $data);
+    call_user_func($module .'_'. $hook, $object_type, &$object, $data, $meta);
   }
 }
 
 /**
  * Save an object
+ * @param string $object_type 
+ * @param object $object. A node, user or anything
  */
 function import_merge_invoke_save($object_type, $object) {
   $hook = 'im_save';

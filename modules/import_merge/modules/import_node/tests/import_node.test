@@ -6,7 +6,7 @@ class ImportNodeTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Import Merge Node',
       'description' => 'Test Node update and save with workflow',
-      'group' => 'Import',
+      'group' => 'Import Merge',
     );
   }
   
@@ -25,7 +25,7 @@ class ImportNodeTestCase extends DrupalWebTestCase {
     $data = array('nid' => rand(1, 99), 'title' => $this->randomName(32));
     $object_type = 'node';
 
-    $node = import_merge_invoke_object($object_type, $data, 'create');
+    $node = import_merge_invoke_init($object_type, $data, 'create');
     $this->assertTrue(is_object($node));
 
     import_merge_invoke_merge($object_type, $node, $data);

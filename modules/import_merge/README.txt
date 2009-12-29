@@ -8,6 +8,27 @@ This module doesn't try to do too much. It provides a basic form interface to th
 another application interface to extra modules that wish to extend its functionality. It really only
 matches a few fields to CSV columns and delegates the loading and editing of objects to sub modules.
 
+The merge object
+==============================
+*type
+The type object your module imports (a node, user etc)
+
+*load
+The field that's used to load an object you wish to merge
+
+*overwrite
+True or False. Overwrite existing content in your site
+
+*create
+True or False. Create new content if it doesn't load
+
+*rows
+An array of rows to merge. Each row is an array with field names as keys and values from the file.
+array('field' => 'some value')
+
+*meta
+Meta information about the merge. This can contain form values etc.
+
 Hooks:
 ==============================
 
@@ -23,7 +44,7 @@ If you want to load a module against a certain attribute or key for updating or 
 return the keys here
 
 *fields
-The use fields to modify your obkect with the data in the columns. 
+The use fields to modify your object with the data in the columns. 
 
 See import_merge_node.module
 
@@ -50,7 +71,7 @@ Check all the set variables like: variable_get('import_default_type', 'page'). Y
 need to set these manually as this module is an early release and only core functionality 
 is built in.
 
-See SAMPLE.txt
+See SAMPLE.csv
 
 This module does not support file handling. 
 Use IMCE or something else for this. See variable_get('import_csv_path', 'sites/default/files/csv');
@@ -58,15 +79,6 @@ Use IMCE or something else for this. See variable_get('import_csv_path', 'sites/
 
 TODOs
 =============================
-
-hook workflow
------------------------------
-
-Abstract forms 
------------------------------
-Currently, the controller that merges CSV with objects is the hook_submit()
-This means other modules can't execute this code without pretending to be a form.
-
 
 Validation
 -----------------------------

@@ -9,7 +9,7 @@ class ImportDataTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Import Merge',
       'description' => 'Ensure that the import module reads datafiles and converts them correctly.',
-      'group' => 'Import',
+      'group' => 'Import Merge',
     );
   }
   
