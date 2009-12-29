@@ -4,13 +4,30 @@
  * Importing taxonomy data is done here 
  */
 
+define("IMPORT_MERGE_TAXONOMY_TYPE", 'term');
+
+function import_merge_taxonomy_form_alter(&$form, $form_state, $form_id) {
+  if(!import_merge_is_taxonomy_type($form_state['post']['type'])) {
+    return;
+  }
+  switch($form_id) {
+    case 'import_merge_form_fields':
+    	$form['vid'] = array(
+        '#type' => 'select',
+        '#title' => t('Merge Vocabulary'),
+        '#options' => import_merge_taxonomy_get_vocabularies(),
+        '#weight' => 0, 
+      );
+      	break;
+  }
+}
 
 /**
  * Implement hook_im()
  */
 function import_merge_taxonomy_im() {
   $info = array(
-    'type' => 'term',
+    'type' => IMPORT_MERGE_TAXONOMY_TYPE,
     'keys' => array(
       'tid' => 'Term Id',
       'name' => 'Term Name',
@@ -26,13 +43,16 @@ function import_merge_taxonomy_im() {
 /**
  * Implement hook_im_init()
  */
-function import_merge_taxonomy_im_init($object_type, $data, $op) {
-  //TODO vocab ID. 
-  if($object_type == 'term') {
+function import_merge_taxonomy_im_init($object_type, $data, $op, $meta = NULL) {
+  $vid = $meta['form_values']['vid'];
+  if(empty($vid)) {
+    return;
+  }
+  if(import_merge_is_taxonomy_type($object_type)) {
     switch($op) {
       case 'create':
       	$term = new stdClass;
-        $term->vid = 1;//testing 
+        $term->vid = $vid;
         $term->name = '';
         $term->description = '';
         $term->weight = 0;
@@ -53,7 +73,7 @@ function import_merge_taxonomy_im_init($object_type, $data, $op) {
  * Implement hook_im_merge()
  */
 function import_merge_taxonomy_im_merge($object_type, &$object, $data) {
-  if($object_type == 'term'){
+  if(import_merge_is_taxonomy_type($object_type)){
     foreach($data as $key => $value) {
       $object->$key = $value;
     }
@@ -64,15 +84,32 @@ function import_merge_taxonomy_im_merge($object_type, &$object, $data) {
  * Implement hook_im_save()
  */
 function import_merge_taxonomy_im_save($object_type, $object) {
-  if($object_type == 'term'){
+  if(import_merge_is_taxonomy_type($object_type)){
     $term = (array) $object;
     taxonomy_save_term($term);
   }
 }
 
+/**
+ * Get the vocabs for merge. 
+ * @return array  
+ */
+function import_merge_taxonomy_get_vocabularies() {
+  $vocabularies = array();
+  foreach(taxonomy_get_vocabularies() as $vocabulary) {
+    $vocabularies[$vocabulary->vid] = $vocabulary->name;
+  }
+  return $vocabularies;
+}
 
-
-
+/**
+ * Is this object the right type?
+ * @param string $object_type
+ * @return boolean 
+ */
+function import_merge_is_taxonomy_type($object_type) {
+  return $object_type == IMPORT_MERGE_TAXONOMY_TYPE;
+}
 
 
 

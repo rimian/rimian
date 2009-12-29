@@ -38,10 +38,10 @@ function import_merge_form($form_state) {
     '#description' => t('This is the type of object that gets loaded or created with the import data'),
     '#options' => !empty($info['types']) ? array_combine($info['types'], $info['types']) : array(),
   );
-  $form['key'] = array(
+  $form['load'] = array(
     '#type' => 'select',
-    '#title' => t('Update Key'),
-    '#description' => t('Load and update objects matching this key.'),
+    '#title' => t('Load Key'),
+    '#description' => t('Load and update objects matching this column.'),
     '#default_value' => variable_get('import_default_key', ''),
     '#options' => array('<none>') + $info['keys'],
   );
@@ -99,12 +99,12 @@ function import_merge_form_fields($form_state) {
   if(empty($form_state['post']['file'])){
     return $form;
   }
-  foreach(array('file', 'key', 'create-new', 'overwrite', 'type', 'new-published') as $hidden) {
-    $form[$hidden] = array('#type' => 'hidden', '#value' => $form_state['post'][$hidden],);
+  foreach(array('file', 'load', 'create-new', 'overwrite', 'type', 'new-published') as $hidden) {
+    $form[$hidden] = array('#type' => 'hidden', '#value' => $form_state['post'][$hidden]);
   }
 
   $info = import_merge_get_info($form_state['post']['type']);
-  
+
   foreach(import_merge_file_to_array($form_state['post']['file'], 'header') as $key => $col) {
     if(!empty($col)) {
       $do_it = TRUE;
@@ -139,12 +139,12 @@ function import_merge_form_fields_submit($form, &$form_state) {
   }
 
   //get info about contributes module form values
-  $merge_data = array();
+  $merge_data = array('form_values' => $form_state['values']);
   
   //create merge object
   $merge_settings = array(
     'type' => $form_state['values']['type'],
-    'load' => $form_state['values']['key'],
+    'load' => $form_state['values']['load'],
     'overwrite' => $form_state['values']['overwrite'],
     'create' => $form_state['values']['create-new'],
     'rows' => $rows,

@@ -4,19 +4,21 @@
  * Importing nodes is done here 
  */
 
+define("IMPORT_MERGE_NODE_TYPE", 'node');
+
 /**
  * Implement hook_im()
  */
 function import_merge_node_im() {
   $info = array(
-    'type' => 'node',
+    'type' => IMPORT_MERGE_NODE_TYPE,
     'keys' => array(
       'nid' => 'Node Id',
       'title' => 'Title',
     ),
     'fields' => array(
       'nid' => 'Node Id',
-      'title' => 'Title',
+      'title' => 'Node Title',
       'body' => 'Body',
       'created' => 'Created',
       'published' => 'Published',
@@ -31,8 +33,8 @@ function import_merge_node_im() {
 /**
  * Implement hook_im_init()
  */
-function import_merge_node_im_init($object_type, $data, $op) {
-  if($object_type == 'node') {
+function import_merge_node_im_init($object_type, $data, $op, $meta = NULL) {
+  if(import_merge_is_node_type($object_type)) {
     switch($op) {
       case 'create':
         return import_merge_node_node_defaults();
@@ -46,7 +48,7 @@ function import_merge_node_im_init($object_type, $data, $op) {
  * Implement hook_im_merge()
  */
 function import_merge_node_im_merge($object_type, &$object, $data) {
-  if($object_type == 'node'){
+  if(import_merge_is_node_type($object_type)){
     foreach($data as $key => $value) {
       $object->$key = $value;
     }
@@ -57,7 +59,7 @@ function import_merge_node_im_merge($object_type, &$object, $data) {
  * Implement hook_im_save()
  */
 function import_merge_node_im_save($object_type, $object) {
-  if($object_type == 'node'){
+  if(import_merge_is_node_type($object_type)){
     node_save($object);
   }
 }
@@ -78,4 +80,14 @@ function import_merge_node_node_defaults() {
   $node->taxonomy = array();
   return $node;
 }
+
+/**
+ * Is this object the right type?
+ * @param string $object_type
+ * @return boolean 
+ */
+function import_merge_is_node_type($object_type) {
+  return $object_type == IMPORT_MERGE_NODE_TYPE;
+}
+
 

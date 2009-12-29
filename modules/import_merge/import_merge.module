@@ -134,7 +134,7 @@ function import_merge_invoke_info() {
 function import_merge_invoke_init($object_type, $data, $op, $meta = NULL) {
   $hook = 'im_init';
   foreach (module_implements($hook) as $module) {
-    $object = call_user_func($module .'_'. $hook, $object_type, $data, $op);
+    $object = call_user_func($module .'_'. $hook, $object_type, $data, $op, $meta);
     if(!empty($object)){
       return $object;
     }
