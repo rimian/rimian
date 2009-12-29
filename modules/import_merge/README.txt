@@ -29,6 +29,8 @@ array('field' => 'some value')
 *meta
 Meta information about the merge. This can contain form values etc.
 
+See: import_merge_merge_object()
+
 Hooks:
 ==============================
 
