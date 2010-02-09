@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * @file
+ * Test the conversion of a CSV file into a keyed array. 
+ * @see test.CSV
+ */
+
 include(drupal_get_path('module', 'import_merge') . '/import_merge.file.inc');
 
 class ImportDataTestCase extends DrupalWebTestCase {
@@ -9,7 +15,7 @@ class ImportDataTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'Import Merge',
+      'name' => 'Import Merge CSV file read',
       'description' => 'Ensure that the import module reads datafiles and converts them correctly.',
       'group' => 'Import Merge',
     );
@@ -17,16 +23,13 @@ class ImportDataTestCase extends DrupalWebTestCase {
   
   public function setUp() {
     parent::setUp('import_merge');
-    $privileged_user = $this->drupalCreateUser(array('import content'));
-    $this->drupalLogin($privileged_user);
-  
     //resources for this test.
     $this->path = drupal_get_path('module', 'import_merge') . '/tests';
     $this->file = 'test.csv';// It's a real file!
     variable_set('import_csv_path', $this->path);
   }
   
-  function tearDown() {
+  public function tearDown() {
     parent::tearDown();
   }
   
@@ -60,6 +63,6 @@ class ImportDataTestCase extends DrupalWebTestCase {
     $this->assertEqual(array_slice($expected, 0, -1), import_merge_file_to_array($file, 'list', count($expected) - 1), 'CSV got N rows', 'File');
     $this->assertEqual(array_slice($expected, 1, -1), import_merge_file_to_array($file, 'skip-header', count($expected) - 2), 'CSV got N rows and skipped header', 'File');
   }
-  
-  
+
 }
+

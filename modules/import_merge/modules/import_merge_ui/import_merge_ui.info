@@ -1,0 +1,5 @@
+name = Import Merge UI
+description = The user interface and menu hooks
+package = Import
+core = 6.x
+dependencies[] = import_merge

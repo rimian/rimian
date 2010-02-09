@@ -1,0 +1,58 @@
+<?php
+/**
+ * @file
+ * Test the profile call backs and work flow
+ */
+
+class ImportProfileTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Import Profile',
+      'description' => 'Create an import profile and save data',
+      'group' => 'Import Merge',
+    );
+  }
+  
+  public function setUp() {
+    parent::setUp('import_merge', 'profile_test');
+  }
+  
+  public function tearDown() {
+    parent::tearDown();
+    db_query("DELETE FROM {variable} WHERE name LIKE '%s%'", _profile_test_var_key(''));
+  }
+
+  public function testOverwriteAndSkipData() {
+    
+    $profile = import_merge_merge_profile();
+    $profile->get_callback = 'profile_test_var_get';
+    $profile->set_callback = 'profile_test_var_set';
+    $profile->create_callback = 'profile_test_var_create_new';
+    $profile->get_data_key = 'import_test';
+    $profile->overwrite = FALSE;
+    $profile->create_new = FALSE;
+    $profile->data = array();
+    $profile->type = 'test_array';
+    
+    $profile->data = array(
+      array('import_test' => $this->randomName(32)),
+    );
+    
+    //create new
+    $profile->create_new = TRUE;
+    import_merge_execute($profile);
+    $this->assertEqual(profile_test_var_get($profile->data[0]), $profile->data[0][$profile->get_data_key]);
+    
+    //overwrite
+    $profile->data[0][$profile->get_data_key] = $this->randomName(16);
+    $profile->overwrite = TRUE;
+    import_merge_execute($profile);
+    $this->assertEqual(profile_test_var_get($profile->data[0]), $profile->data[0][$profile->get_data_key]);
+  }
+  
+}
+
+
+
+

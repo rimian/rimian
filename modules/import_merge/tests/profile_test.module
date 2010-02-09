@@ -1,0 +1,43 @@
+<?php
+/**
+ * @file
+ * 
+ * This is a test module. 
+ */
+
+/**
+ * Implement hook_merge 
+ */
+function profile_test_merge($type, &$arr, $data, $meta = NULL) {
+  if($type == 'test_array') {
+    $arr = $data;
+  }
+}
+
+/**
+ * Set call back 
+ */
+function profile_test_var_set($object) {
+  variable_set(_profile_test_var_key(key($object)), current($object));
+}
+
+/**
+ * Get call back 
+ */
+function profile_test_var_get($data, $meta = NULL) {
+  return variable_get(_profile_test_var_key('import_test'), FALSE);
+}
+
+/**
+ * Create New call back
+ */
+function profile_test_var_create_new($data, $meta = NULL) {
+  return array(_profile_test_var_key(key($data)) => NULL);
+}
+
+/**
+ * For easy tear down simple test 
+ */
+function _profile_test_var_key($key) {
+  return 'profile_test_'. $key;
+} 
