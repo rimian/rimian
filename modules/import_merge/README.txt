@@ -50,6 +50,21 @@ Information about the merge, such as user input
 
 ================================
 
+Callback arguments
+
+Your callbacks should expect the arguments supplied by the import_merge engine
+
+*get_callback
+array(key => value), meta
+
+*set_callback
+$profile->create_callback, $row, $profile->meta
+
+*create_callback
+$profile->type, $object, $row, $profile->meta
+
+================================
+
 Check all the set variables like: variable_get('import_default_type', 'page'). You'll 
 need to set these manually as this module is an early release and only core functionality 
 is built in.
