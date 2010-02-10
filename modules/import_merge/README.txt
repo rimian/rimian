@@ -72,8 +72,20 @@ is built in.
 See SAMPLE.csv
 
 This module does not support file handling. 
-Use IMCE or something else for this. See variable_get('import_csv_path', 'sites/default/files/csv');
+Use IMCE or something else for this. 
+See variable_get('import_csv_path', 'sites/default/files/csv');
 
+Line break issues
+================================
+You may have trouble with MS Windows linebreaks. The best solution is not to use Microsoft 
+at all but for most people this will be impractical. 
+
+If you're using Open Office you'll probably be OK. 
+
+If you can't use Open Office, this simple perl command will replace the ^M chgaracters 
+with proper line breaks:
+
+perl -pi -e "s/\x0D/\n/g" myfile.csv 
 
 TODOs
 =============================
