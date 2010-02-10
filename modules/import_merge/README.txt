@@ -34,38 +34,19 @@ See: import_merge_merge_object()
 Hooks:
 ==============================
 
-hook_im()
-------------------------------
-This hook tells import about your module. It should return an array with the keys:
+hook_merge($type, &$object, $data, $meta) 
 
-* type
-The type object your module imports (a node, user etc)
+*type
+The merge type can be something like a node, taxonomy term, user or anything
 
-* keys
-If you want to load a module against a certain attribute or key for updating or ignoring, then 
-return the keys here
+*object
+The object to be merged (a type)
 
-*fields
-The use fields to modify your object with the data in the columns. 
+*data
+An array to merge with the object
 
-See import_merge_node.module
-
-hook_im_init($object_type, $data, $op)
------------------------------
-$object_type matches against 'type' provided by your info hook
-$data is the row from your CSV
-$op is the operation being performed. Values are 'create' and 'load'. See import_merge_node.module
-
-hook_im_merge($object_type, &$object, $data)
------------------------------
-Merge the row with the object. The object is passed by reference and modified by they array $data
-This function should not return anything
-
-hook_im_save($object_type, &$object)
------------------------------
-Save the object. 
-This function should not return anything
-
+*meta 
+Information about the merge, such as user input
 
 ================================
 
