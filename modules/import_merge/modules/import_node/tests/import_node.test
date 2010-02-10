@@ -5,35 +5,52 @@ class ImportNodeTestCase extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Import Merge Node',
-      'description' => 'Test Node update and save with workflow',
+      'description' => 'Test Node merges',
       'group' => 'Import Merge',
     );
   }
   
-  function tearDown() {
+  public function tearDown() {
     parent::tearDown();
   }
   
   public function setUp() {
-    parent::setUp('import_merge', 'import_merge_node');
-    $privileged_user = $this->drupalCreateUser(array('import content'));
-    $this->drupalLogin($privileged_user);
+    parent::setUp('import_merge', 'import_merge_node', 'import_node_test');
   }
   
-  public function testSaveLoad() {
-
-    $data = array('nid' => rand(1, 99), 'title' => $this->randomName(32));
-    $object_type = 'node';
-
-    $node = import_merge_invoke_init($object_type, $data, 'create');
-    $this->assertTrue(is_object($node));
-
-    import_merge_invoke_merge($object_type, $node, $data);
-    $this->assertEqual($data['title'], $node->title);
+  public function profileCreateNode($settings = array()) {
+    return $this->drupalCreateNode($settings);
+  }
+  
+  public function testNodeMerge() {
+    $settings = array();
+    $node = $this->drupalCreateNode($settings);
     
-    $this->assertFalse(isset($node->created));
-    import_merge_invoke_save($object_type, $node);
-    $this->assertTrue(isset($node->created));
+    $profile = import_merge_node_merge_profile();
+    $profile->set_callback = 'import_node_test_node_save';
+    $profile->get_callback = 'import_node_test_node_load';
+    $profile->create_callback = 'import_node_test_create_node';
+    $profile->meta = $this;
+    $profile->get_data_key = 'title';
+      
+    $profile->data = array(
+      array('title' => $this->randomName(32), 'body' => $this->randomName(64)),
+      array('title' => $this->randomName(32), 'body' => $this->randomName(64)),
+    );
+    
+    //create new
+    $profile->create_new = TRUE;
+    import_merge_execute($profile);
+    $this->assertTrue(is_object(node_load(array('title' => $profile->data[1]['title']))));
+    
+    //over write (using last test's nodes)
+    $profile->data[1]['body'] = $this->randomName(16);
+    $profile->overwrite = TRUE;
+    $profile->create_new = FALSE;
+    import_merge_execute($profile);
+    $node = node_load(array('title' => $profile->data[1]['title']));
+    $this->assertEqual($profile->data[1]['body'], $node->body);
     
   }
+
 }

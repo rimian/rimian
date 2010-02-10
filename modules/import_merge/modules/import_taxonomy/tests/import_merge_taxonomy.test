@@ -1,0 +1,25 @@
+<?php
+
+class ImportTaxonomyTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Import Merge Taxonomy',
+      'description' => 'Test taxonomy merges',
+      'group' => 'Import Merge',
+    );
+  }
+  
+  public function tearDown() {
+    parent::tearDown();
+  }
+  
+  public function setUp() {
+    parent::setUp('import_merge');
+  }
+  
+  public function testTaxonomyTermMerge() {
+    
+  }
+  
+}

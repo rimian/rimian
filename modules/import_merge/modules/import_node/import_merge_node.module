@@ -1,54 +1,17 @@
 <?php
 /**
  * @file
- * Importing nodes is done here 
+ * Importing nodes is done here.
+ * You should extend this module if you're importing nodes with more information
  */
 
-define("IMPORT_MERGE_NODE_TYPE", 'node');
+include('import_merge_node.pages.inc');
 
 /**
- * Implement hook_im()
+ * Implement hook_merge()
  */
-function import_merge_node_im() {
-  $info = array(
-    'type' => IMPORT_MERGE_NODE_TYPE,
-    'keys' => array(
-      'nid' => 'Node Id',
-      'title' => 'Title',
-    ),
-    'fields' => array(
-      'nid' => 'Node Id',
-      'title' => 'Node Title',
-      'body' => 'Body',
-      'created' => 'Created',
-      'published' => 'Published',
-      'sticky' => 'Sticky',
-      'promote' => 'Promoted',
-    ),
-  );
-  return $info;
-}
-
-
-/**
- * Implement hook_im_init()
- */
-function import_merge_node_im_init($object_type, $data, $op, $meta = NULL) {
-  if(import_merge_is_node_type($object_type)) {
-    switch($op) {
-      case 'create':
-        return import_merge_node_node_defaults();
-      case 'load':
-      	return node_load(array($data['key'] => $data['value']));
-    }  
-  }
-}
-
-/**
- * Implement hook_im_merge()
- */
-function import_merge_node_im_merge($object_type, &$object, $data) {
-  if(import_merge_is_node_type($object_type)){
+function import_merge_node_im_merge($type, &$node, $data, $meta = NULL) {
+  if($type == 'node'){
     foreach($data as $key => $value) {
       $object->$key = $value;
     }
@@ -56,19 +19,37 @@ function import_merge_node_im_merge($object_type, &$object, $data) {
 }
 
 /**
- * Implement hook_im_save()
+ * Create a default profile
+ * @return object $profile
  */
-function import_merge_node_im_save($object_type, $object) {
-  if(import_merge_is_node_type($object_type)){
-    node_save($object);
-  }
+function import_merge_node_merge_profile() {
+  $profile = new stdClass;
+  $profile->name = NULL;
+  $profile->type = 'node';
+  $profile->overwrite = FALSE;
+  $profile->create_new = TRUE;
+  $profile->data = array();
+  $profile->get_callback = 'import_merge_node_node_load';
+  $profile->set_callback = 'import_merge_node_node_save';
+  $profile->create_callback = 'import_merge_node_node_new';
+  $profile->get_data_key = NULL;
+  $profile->meta = NULL;
+  return $profile;
+}
+
+function import_merge_node_node_load($data, $meta = NULL) {
+  return node_load($data);
+}
+
+function import_merge_node_node_save($node, $meta = NULL) {
+  node_save($node);
 }
 
 /**
  * Create a default node 
- * @return object $node 
+ * @return object $node
  */
-function import_merge_node_node_defaults() {
+function import_merge_node_node_new() {
   global $user;
   $language = language_default();
   $node = new stdClass;
@@ -81,13 +62,5 @@ function import_merge_node_node_defaults() {
   return $node;
 }
 
-/**
- * Is this object the right type?
- * @param string $object_type
- * @return boolean 
- */
-function import_merge_is_node_type($object_type) {
-  return $object_type == IMPORT_MERGE_NODE_TYPE;
-}
 
 

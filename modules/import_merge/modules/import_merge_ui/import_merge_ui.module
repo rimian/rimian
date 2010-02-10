@@ -1,0 +1,131 @@
+<?php
+/**
+ * 
+ * @file
+ * The user interface for import_merge.
+ * 
+ * Builds a merge profile
+ */
+
+/**
+ * Implement hook_menu() 
+ */
+function import_merge_ui_menu() {
+  $items = array();
+  $items['import'] = array(
+    'title' => t('Import Data'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('import_merge_ui_forms'), 
+    'access arguments' => array('import content'),
+    'file' => 'import_merge_ui.pages.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+
+/**
+ * Implement hook_perm() 
+ */
+function import_merge_ui_perm() {
+  return array('import content');
+}
+
+function import_merge_ui_forms($form_state) {
+  
+  if(!arg(1)){
+    $forms = array(
+      'import_merge_ui_form',
+      'import_merge_ui_form_fields'
+    );
+    $profile = import_merge_merge_profile(array('forms' => $forms));
+  }
+  else{
+    //TODO: persist profile somewhere else
+    $profile = $_SESSION['profile'];
+  }
+
+  $form_state['profile'] = $profile;
+  
+  $form_id = $profile->forms[0 + arg(1)];
+  $form = call_user_func($form_id, $form_state);
+
+  $form['#validate'] = array(
+    'import_merge_ui_forms_validate',
+    $form_id . '_validate'
+  );
+  $form['#submit'] = array(
+    'import_merge_ui_forms_submit', 
+    $form_id . '_submit', 
+    'import_merge_ui_forms_step'
+  );
+  
+  return $form;
+}
+
+
+
+function import_merge_ui_forms_validate($form, &$form_state) {
+
+}
+
+function import_merge_ui_forms_submit($form, &$form_state) {
+
+}
+
+
+/**
+ * The last form submit hook that redirects to the next form in the merge profile
+ * @param array $form
+ * @param array $form_state
+ */
+function import_merge_ui_forms_step($form, &$form_state) {
+  
+  $profile = $form_state['profile'];
+  $step = 1 + arg(1);
+  
+  if(function_exists($profile->forms[$step])){
+    $_SESSION['profile'] = $profile;
+    drupal_goto('import/'. $step);
+  }
+}
+
+/**
+ * The interface to import_merge_invoke_info()
+ * @param string $name. A profile name if you only want one of them.
+ * @return array $info all the info or just the one 
+ */
+function import_merge_ui_get_info($name = NULL) {
+  $info = import_merge_ui_invoke_info();
+  return empty($name) ? $info : $info[$name];
+}
+
+/**
+ * Load information about contributed modules for UI
+ * 
+ * You should not call this function directly.
+ * @see import_merge_get_info()
+ * 
+ * @return array 
+ */
+function import_merge_ui_invoke_info() {
+  $infos = array();
+  $hook = 'im_ui_profile';
+  $mask =  array(
+    'description' => '',
+    'type' => '',
+    'load_keys' => array(),
+    'merge_fields' => array()
+  );
+  foreach (module_implements($hook) as $module) {
+    $info = call_user_func($module .'_'. $hook);
+    $infos[key($info)] = array_merge($mask, current($info));
+    $infos[key($info)] = array_intersect_key($infos[key($info)], $mask);
+  }
+  return $infos;
+}
+
+
+
+
+
+

@@ -5,6 +5,8 @@ Import Merge
 Import Merge is a simple API module that loads data from a CSV file and delegates 
 to other modules for merging with nodes, users, taxonomy or what ever you wish. 
 
-Support for nodes and taxonomy terms is included so far.
+The import_merge engine does the work of itterating through your data and delegating 
+to callbacks to create, save or load data. After import_merge has the object it wishes
+to merge available, it delegates to helper modules to do the merge.
 
 

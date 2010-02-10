@@ -6,36 +6,14 @@
 
 define("IMPORT_MERGE_TAXONOMY_TYPE", 'term');
 
-function import_merge_taxonomy_form_alter(&$form, $form_state, $form_id) {
-  if(!import_merge_is_taxonomy_type($form_state['post']['type'])) {
-    return;
-  }
-  switch($form_id) {
-    case 'import_merge_form_fields':
-    	$form['vid'] = array(
-        '#type' => 'select',
-        '#title' => t('Merge Vocabulary'),
-        '#options' => import_merge_taxonomy_get_vocabularies(),
-        '#weight' => 0, 
-      );
-      	break;
-  }
-}
-
 /**
- * Implement hook_im()
+ * Implement hook_im_ui_profile()
  */
-function import_merge_taxonomy_im() {
-  $info = array(
+function import_merge_taxonomy_im_ui_profile() {
+  $info['taxonomy_term'] = array(
+    'description' => t('Taxonomy Term Import'),
     'type' => IMPORT_MERGE_TAXONOMY_TYPE,
-    'keys' => array(
-      'tid' => 'Term Id',
-      'name' => 'Term Name',
-    ),
-    'fields' => array(
-      'tid' => 'Term Id',
-      'name' => 'Term Name',
-    ),
+    'form' => 'import_merge_taxonomy_form'
   );
   return $info;
 }

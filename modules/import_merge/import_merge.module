@@ -15,164 +15,65 @@
  * @see http://www.coopers.com.au
  */
 
-/**
- * Implement hook_menu() 
- */
-function import_merge_menu() {
-  $items = array();
-  $items['import'] = array(
-    'title' => t('Import Data'),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('import_merge_form'),
-    'access arguments' => array('import content'),
-    'type' => MENU_NORMAL_ITEM,
-    'file' => 'import_merge.pages.inc',
-  );
-  $items['import/fields'] = array(
-    'title' => t('Import Data'),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('import_merge_form_fields'),
-    'access arguments' => array('import content'),
-    'type' => MENU_CALLBACK,
-    'file' => 'import_merge.pages.inc',
-  );
-  return $items;
-}
-
-/**
- * Implement hook_perm() 
- */
-function import_merge_perm() {
-  return array('import content');
-}
 
 /**
  * Execute merge
- * @param object $merge
+ * @param object $profile. A merge profile
  */
-function import_merge_execute($merge) {
-  foreach($merge->rows as $row) {
+function import_merge_execute($profile) {
+  foreach($profile->data as $row) {
     $object = NULL;
-    if(!empty($merge->load) && $merge->overwrite) {
-      $object = import_merge_invoke_init($merge->type, array('key' => $merge->load, 'value' => $row[$merge->load]), 'load', $merge->meta);
-    } 
-    if(!$object && $merge->create) {
-      $object = import_merge_invoke_init($merge->type, $row, 'create', $merge->meta);
+    if($profile->overwrite) {
+      $object = call_user_func($profile->get_callback, array($profile->get_data_key => $row[$profile->get_data_key]), $profile->meta);
+    }
+    if(!$object && $profile->create_new) {
+      $object = call_user_func($profile->create_callback, $row, $profile->meta);
     }
     if(!empty($object)) {
-      import_merge_invoke_merge($merge->type, $object, $row, $merge->meta);
-      import_merge_invoke_save($merge->type, $object);
+      import_merge_invoke_merge($profile->type, $object, $row, $profile->meta);
+      call_user_func($profile->set_callback, $object);
     }
   }
 }
 
 /**
- * A merge object. This contains info about the merge and rows
+ * A default merge profile. This contains info about the merge and rows
  * @param array [optional] $settings
- * @return object $merge
+ * @return object $profile
  */
-function import_merge_merge_object($settings = array()) {
-  $merge = new stdClass;
-  $merge->type = NULL;
-  $merge->load = NULL;
-  $merge->overwrite = FALSE;
-  $merge->create = TRUE;
-  $merge->rows = array();
-  $merge->meta = NULL;
+function import_merge_merge_profile($settings = array()) {
+  $profile = new stdClass;
+  $profile->name = NULL;
+  $profile->type = NULL;
+  $profile->overwrite = FALSE;
+  $profile->create_new = TRUE;
+  $profile->data = array();
+  $profile->get_callback = NULL;
+  $profile->set_callback = NULL;
+  $profile->create_callback = NULL;
+  $profile->get_data_key = NULL;
+  $profile->meta = NULL;
+  
   foreach($settings as $key => $value) {
-    $merge->$key = $value;
+    $profile->$key = $value;
   }
-  return $merge;
+  return $profile;
 }
 
-/**
- * The interface to import_merge_invoke_info()
- * @param string $object_type
- * @return array $info all the info for this type or all types
- */
-function import_merge_get_info($object_type = NULL) {
-  $info = array(
-    'types' => array(),
-    'keys' => array(),
-    'fields' => array(),
-  );
-  foreach(import_merge_invoke_info() as $module_info) {
-    if(is_null($object_type) || $module_info['type'] == $object_type) {
-      //TODO: eeeww!
-      $info['types'][$module_info['type']] = $module_info['type'];
-      if(is_array($module_info['keys'])) $info['keys'] = array_merge($info['keys'], $module_info['keys']);
-      if(is_array($module_info['fields'])) $info['fields'] = array_merge($info['fields'], $module_info['fields']);
-    }
-  }
-  return $info;
-}
+
 
 /**
- * Load information about contributed modules
- * 
- * You should not call this function directly.
- * @see import_merge_get_object_info()
- * 
- * @return array 
- */
-function import_merge_invoke_info() {
-  $info = array();
-  $hook = 'im';
-  foreach (module_implements($hook) as $module) {
-    $info[] = call_user_func($module .'_'. $hook);
-  }
-  return $info;
-}
-
-/**
- * Load or create a new object
- * @param string $object_type
- * @param $data
- * @param string $op
+ * Delegate to modules that merge the imported data with the object
+ * @param string $type 
+ * @param object $object. A node, user or anything
+ * @param object $data. The data to merge
  * @param mixed $meta. Meta Information about this merge operation
  */
-function import_merge_invoke_init($object_type, $data, $op, $meta = NULL) {
-  $hook = 'im_init';
+function import_merge_invoke_merge($type, &$object, $data, $meta) {
+  $hook = 'merge';
   foreach (module_implements($hook) as $module) {
-    $object = call_user_func($module .'_'. $hook, $object_type, $data, $op, $meta);
-    if(!empty($object)){
-      return $object;
-    }
-  } 
-  return FALSE;
-}
-
-/**
- * Merge the imported data with the object
- * @param string $object_type 
- * @param object $object. A node, user or anything
- * @param mixed $meta. Meta Information about this merge operation
- */
-function import_merge_invoke_merge($object_type, &$object, $data, $meta = NULL) {
-  $hook = 'im_merge';
-  foreach (module_implements($hook) as $module) {
-    call_user_func($module .'_'. $hook, $object_type, &$object, $data, $meta);
+    $function = $module .'_'. $hook;
+    $function($type, &$object, $data, $meta);
   }
 }
-
-/**
- * Save an object
- * @param string $object_type 
- * @param object $object. A node, user or anything
- */
-function import_merge_invoke_save($object_type, $object) {
-  $hook = 'im_save';
-  foreach (module_implements($hook) as $module) {
-    call_user_func($module .'_'. $hook, $object_type, $object);
-  }
-}
-
-function _import_merge_tidy_data($data) {
-  $tidy_data = array();
-  foreach($data as $col){
-    $tidy_data[] = trim(check_plain($col));
-  }
-  return $tidy_data;
-}
-
 

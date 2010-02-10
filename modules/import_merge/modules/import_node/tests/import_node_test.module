@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * Implement hook_merge 
+ */
+function import_node_test_merge($type, &$node, $data, $meta = NULL) {
+  if($type == 'node') {
+    foreach($data as $key => $value) {
+      $node->$key = $value;
+    }
+  }
+}
+
+/**
+ * Create new node call back 
+ * @param $data the keyed array for merging
+ * @param $test the test class for creating the test node
+ */
+function import_node_test_create_node($data, $test) {
+  $data['type'] = 'page';
+  return $test->profileCreateNode($data);
+}
+
+/**
+ * Get call back
+ */
+function import_node_test_node_load($data, $meta = NULL) {
+  return node_load($data);
+}
+
+/**
+ * Set call back 
+ */
+function import_node_test_node_save($node, $meta = NULL) {
+  node_save($node);
+}

@@ -1,0 +1,6 @@
+name = "Node Merge Test"
+description = "For testing The merging of nodes."
+package = Testing
+version = VERSION
+core = 6.x
+hidden = TRUE

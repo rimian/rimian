@@ -1,0 +1,6 @@
+name = "Import Merge Profile Test"
+description = "For testing the merge profile. Provides some hooks."
+package = Testing
+version = VERSION
+core = 6.x
+hidden = TRUE
