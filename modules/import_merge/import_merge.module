@@ -60,7 +60,24 @@ function import_merge_merge_profile($settings = array()) {
   return $profile;
 }
 
-
+/**
+ * Trim down the columns to the specified keys and substitute if necessary 
+ * @param array $data
+ * @param array $keys
+ * @param array [optional] $new_keys
+ */
+function import_merge_set_data_keys(&$data, $keys, $new_keys = FALSE) {
+  //TODO: i wrote this in a hurry... it can be refined
+  $new_data = array();
+  foreach($data as $row) {
+    $row = array_intersect_key($row, $keys);
+    if(is_array($new_keys)){
+      $row = array_combine($new_keys, $row);
+    }
+    $new_data[] = $row;
+  }
+  $data = $new_data;
+}
 
 /**
  * Delegate to modules that merge the imported data with the object
@@ -76,4 +93,8 @@ function import_merge_invoke_merge($type, &$object, $data, $meta) {
     $function($type, &$object, $data, $meta);
   }
 }
+
+
+
+
 
