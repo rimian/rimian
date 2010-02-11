@@ -13,7 +13,7 @@ include('import_merge_node.pages.inc');
 function import_merge_node_merge($type, &$node, $data, $meta = NULL) {
   if($type == 'node'){
     foreach($data as $key => $value) {
-      $object->$key = $value;
+      $node->$key = $value;
     }
   }
 }
