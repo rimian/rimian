@@ -12,8 +12,8 @@ function import_merge_file_to_array($file, $op = 'list', $limit = 0, $mask = arr
   $rows = array();
   if(file_exists($file) && !is_dir($file)){
     drupal_set_message('Opened file: '. $file, 'status', FALSE);
-    $handle = fopen($file, "r");
-    while (($data = fgetcsv($handle)) !== FALSE) {
+    $handle = fopen($file, 'r');
+    while (($data = import_merge_fgetcsv($handle)) !== FALSE) {
       
       if(!empty($mask)) {
         $data = array_intersect_key($data, $mask);
@@ -72,3 +72,24 @@ function import_merge_get_file_path($basename = FALSE) {
   }
   return $file;
 }
+
+/**
+ * Wrap this for speed and readability. Running this with only one argument is slightly faster
+ * @param object $handle
+ * @return  An indexed array containing the fields read. Blank lines are returned as an array containing a single NULL
+ * @see http://au2.php.net/manual/en/function.fgetcsv.php
+ */
+function import_merge_fgetcsv($handle) {
+  $delimiter = variable_get('import_merge_delimiter', NULL);
+  $enclosure = variable_get('import_merge_enclosure', NULL);
+  $escape =  variable_get('import_merge_escape', NULL);
+  if(empty($delimiter) && empty($enclosure) && empty($escape)){
+    return fgetcsv($handle);
+  }
+  else {
+    return fgetcsv($handle, 0, $delimiter, $enclosure, $escape);
+  }
+}
+
+
+

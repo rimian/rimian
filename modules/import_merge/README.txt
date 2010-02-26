@@ -74,6 +74,9 @@ See SAMPLE.csv
 This module does not support file handling. 
 Use IMCE or something else for this. See variable_get('import_csv_path', 'sites/default/files/csv');
 
+Line breaks problems?
+=============================
+See: http://au2.php.net/manual/en/filesystem.configuration.php#ini.auto-detect-line-endings
 
 TODOs
 =============================
