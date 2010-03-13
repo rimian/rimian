@@ -13,7 +13,10 @@ function import_merge_file_to_array($file, $op = 'list', $limit = 0, $mask = arr
   if(file_exists($file) && !is_dir($file)){
     drupal_set_message('Opened file: '. $file, 'status', FALSE);
     $handle = fopen($file, 'r');
-    while (($data = import_merge_fgetcsv($handle)) !== FALSE) {
+    $delimiter = variable_get('import_merge_delimiter', NULL);
+    $enclosure = variable_get('import_merge_enclosure', NULL);
+    $escape =  variable_get('import_merge_escape', NULL);
+    while (($data = import_merge_fgetcsv($handle, $delimiter, $enclosure, $escape)) !== FALSE) {
       
       if(!empty($mask)) {
         $data = array_intersect_key($data, $mask);
@@ -79,10 +82,7 @@ function import_merge_get_file_path($basename = FALSE) {
  * @return  An indexed array containing the fields read. Blank lines are returned as an array containing a single NULL
  * @see http://au2.php.net/manual/en/function.fgetcsv.php
  */
-function import_merge_fgetcsv($handle) {
-  $delimiter = variable_get('import_merge_delimiter', NULL);
-  $enclosure = variable_get('import_merge_enclosure', NULL);
-  $escape =  variable_get('import_merge_escape', NULL);
+function import_merge_fgetcsv($handle, $delimiter, $enclosure, $escape) {
   if(empty($delimiter) && empty($enclosure) && empty($escape)){
     return fgetcsv($handle);
   }
