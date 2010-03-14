@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * @file
+ * 
+ */
+
+
+class GUITestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'GUI Test',
+      'description' => 'Test the user interface.',
+      'group' => 'Import Merge',
+    );
+  }
+  
+  public function setUp() {
+    parent::setUp('import_merge');
+  }
+  
+  public function tearDown() {
+    parent::tearDown();
+  }
+  
+  public function testFilesSelect() {
+    $files = array();//TODO
+    $this->assertTRUE(!empty($files));
+    $this->getURL('/importmerge');
+    $this->assertField('edit-files', $files);
+  }
+
+  public function testProfilesSelect() {
+    $profiles = array();//TODO
+    $this->assertTRUE(!empty($profiles));
+    $this->getURL('/importmerge');
+    $this->assertField('edit-profiles', $profiles);
+  }
+}
+
