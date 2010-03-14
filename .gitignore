@@ -1,5 +1,4 @@
-.tmp*
 .buildpath
 .project
 .settings
-
+.tmp*

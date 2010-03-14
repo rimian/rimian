@@ -1,0 +1,37 @@
+<?php
+
+/**
+ * @file
+ * 
+ * An implementation of the jQuery Cycle Plugin
+ * 
+ * @see http://malsup.com/jquery/cycle/
+ * 
+ */
+
+
+function jcycle_load_js() {
+  drupal_add_js(drupal_get_path('module', 'jcycle') .'/jquery.cycle.all.min.js');
+}
+
+function jcycle_add_cycle_object($selector, $settings = array()) {
+  
+  jcycle_load_js();
+  
+  $defaults = array(
+    'fx' =>   'fade', 
+    'speed' =>   300, 
+    'timeout' =>   3000, 
+  );
+  
+  $cycle = array();
+  foreach(array_merge($defaults, $settings) as $key => $setting) {
+    $value = is_string($setting) ? "'$setting'" : $setting;
+    $cycle[] = sprintf('%s: %s', $key, $value);
+  }
+  
+  drupal_add_js('$(document).ready(function() {$' . sprintf("('%s').cycle({\n%s});\n});", $selector, implode(",\n", $cycle)), 'inline');
+}
+
+
+

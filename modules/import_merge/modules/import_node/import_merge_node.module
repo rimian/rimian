@@ -10,10 +10,10 @@ include('import_merge_node.pages.inc');
 /**
  * Implement hook_merge()
  */
-function import_merge_node_im_merge($type, &$node, $data, $meta = NULL) {
+function import_merge_node_merge($type, &$node, $data, $meta = NULL) {
   if($type == 'node'){
     foreach($data as $key => $value) {
-      $object->$key = $value;
+      $node->$key = $value;
     }
   }
 }

@@ -1,0 +1,4 @@
+name = jCycle
+description = Implement jQuery Cycle Plugin.
+core = 6.x
+version = 6.x-leanne
