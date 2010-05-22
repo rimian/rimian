@@ -10,12 +10,12 @@
 function import_merge_file_to_array($file, $op = 'list', $limit = 0, $mask = array()) {
   set_time_limit(0);
   $rows = array();
+  $delimiter = variable_get('import_merge_delimiter', NULL);
+  $enclosure = variable_get('import_merge_enclosure', NULL);
+  $escape =  variable_get('import_merge_escape', NULL);
   if(file_exists($file) && !is_dir($file)){
     drupal_set_message('Opened file: '. $file, 'status', FALSE);
     $handle = fopen($file, 'r');
-    $delimiter = variable_get('import_merge_delimiter', NULL);
-    $enclosure = variable_get('import_merge_enclosure', NULL);
-    $escape =  variable_get('import_merge_escape', NULL);
     while (($data = import_merge_fgetcsv($handle, $delimiter, $enclosure, $escape)) !== FALSE) {
       
       if(!empty($mask)) {
