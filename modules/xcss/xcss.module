@@ -1,0 +1,99 @@
+<?php
+
+
+/**
+ * @file
+ * Provides integration with the xCSS library.
+ */
+
+/**
+ * Implement hook_help().
+ */
+function xcss_help($path, $arg) {
+ switch ($path) {
+    // Main module help for the block module
+    case 'admin/settings/xcss':
+      $output = '<p>' . t('The <a href="@xcss">xCSS Framework</a> empowers a straightforward and object-oriented workflow when developing complex style cascades. Using xCSS means a dramatic cut down to your development time by: having a intuitive overview of the overall CSS structure, using variables, re-using existing style cascades and many other handy features. This module processes all *.xcss files through the framework.', array('@xcss' => 'http://xcss.antpaw.org')) . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implement hook_menu().
+ */
+function xcss_menu() {
+  $items['admin/settings/xcss'] = array(
+    'title' => 'xCSS',
+    'description' => 'Configure how the xCSS library compiles cascading stylesheet across your website.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('xcss_settings'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'xcss.admin.inc',
+  );
+  return $items;
+}
+
+
+function xcss_process_xcss() {
+  if(file_check_directory(xcss_path_to_file('css'), TRUE)) {
+    $files = array(
+      xcss_path_to_file('xcss', TRUE) => xcss_path_to_file('css', TRUE),
+    );
+//    drupal_set_message(serialize($files));
+    xcss_compile($files);
+  }
+}
+
+function xcss_compile($files) {
+  // Generate relative from the Drupal root directory.
+  $config['path_to_css_dir'] = './';
+  $config['minify_output'] = variable_get('xcss_minify_output', FALSE);
+  $config['debugmode'] = variable_get('xcss_debugmode', FALSE);
+  $config['use_master_file'] = FALSE;
+  $config['compress_output_to_master'] = FALSE;
+  $config['master_filename'] = file_directory_path() . '/xcss/master.css';
+  $config['xCSS_files'] = $files;
+  define('XCSSCLASS', TRUE);
+  include(drupal_get_path('module', 'xcss') .'/xcss/xcss-class.php');
+  $xcss = new xCSS($config);
+  $xcss->compile();
+}
+
+/**
+ * Implement hook_flush_caches().
+ */
+function xcss_flush_caches() {
+  xcss_process_xcss();
+}
+
+/**
+ * Implement hook_init
+ */
+function xcss_init() {
+  drupal_add_css(xcss_path_to_file('css', TRUE));
+}
+
+
+/*
+ * @param $type css or xcss.
+ * @param $file_name append the css file name if true.
+ * @return path to CSS directory or css file
+ */
+function xcss_path_to_file($type, $file_name = FALSE) {
+  switch($type) {
+    case 'css':
+      $path = file_create_path() .'/xcss';
+      break;
+
+    case 'xcss':
+      $path = variable_get('xcss_master_file_path', FALSE);
+      if(!$path) {
+        $path = drupal_get_path('theme', variable_get('theme_default', 'garland'));
+      }
+      break;
+  }
+  return $file_name ? $path . '/master.'. $type : $path;
+}
+
+
+

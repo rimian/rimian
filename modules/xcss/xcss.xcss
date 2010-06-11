@@ -1,0 +1,53 @@
+/**
+ * $Id: xcss.xcss,v 1.1.2.1 2009/11/14 00:58:23 robloach Exp $
+ *
+ * @file
+ * Provides a test for the xCSS library on the xCSS administration page.
+ */
+
+// Variables: http://xcss.antpaw.org/docs/syntax/variables
+vars {
+    $path = ../img/tmpl1/png;
+    $color1 = #FF00FF;
+    $border = border-top: 1px solid $color1;
+}
+
+.variablesselector {
+    background-image: url($path/head_bg.png);
+    background-color: $color1;
+    $border;
+}
+
+// Nesting Child Objects: http://xcss.antpaw.org/docs/syntax/children
+.childselector {
+    a {
+        display: block;
+    }
+    strong {
+        color: blue;
+    }
+}
+
+// Extending Objects: http://xcss.antpaw.org/docs/syntax/extends
+.basicClass {
+    self {
+        padding: 20px;
+        background-color: #FF0000;
+    }
+    a {
+        text-decoration: none;
+    }
+}
+.specialClass extends .basicClass {
+    padding: 10px;
+    font-size: 14px;
+}
+.specialLink extends .basicClass a {}
+
+// Math Operations: http://xcss.antpaw.org/docs/syntax/math
+.mathselector {
+    padding: [5px * 2];
+    color: [#ccc * 2];
+    // lets assume $color is '#FFF555'
+    background-color: [$color - #222 + #101010];
+}
