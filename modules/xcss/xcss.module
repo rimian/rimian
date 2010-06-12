@@ -35,12 +35,16 @@ function xcss_menu() {
 
 
 function xcss_process_xcss() {
-  if(file_check_directory(xcss_path_to_file('css'), TRUE)) {
-    $files = array(
-      xcss_path_to_file('xcss', TRUE) => xcss_path_to_file('css', TRUE),
-    );
-//    drupal_set_message(serialize($files));
-    xcss_compile($files);
+  if(file_check_directory(xcss_fileapi('css'), TRUE)) {
+    //scan for all xcss files
+    $files = array();
+    foreach(xcss_fileapi('xcss', 'list') as $key => $value) {
+      $files[$key] = xcss_fileapi('css', 'file', $value->name);
+    }
+    if(!empty($files)) {
+      //rebuild the css files
+      xcss_compile($files);
+    }
   }
 }
 
@@ -70,29 +74,49 @@ function xcss_flush_caches() {
  * Implement hook_init
  */
 function xcss_init() {
-  drupal_add_css(xcss_path_to_file('css', TRUE));
+  foreach(xcss_fileapi('css', 'list') as $path => $obj) {
+    drupal_add_css($path);
+  }
 }
 
 
 /*
  * @param $type css or xcss.
- * @param $file_name append the css file name if true.
- * @return path to CSS directory or css file
+ * @param $op
+ * @param $a
+ * @return 
  */
-function xcss_path_to_file($type, $file_name = FALSE) {
+function xcss_fileapi($type, $op = 'dir', $a = NULL) {
+  //get directory for this file type
   switch($type) {
     case 'css':
-      $path = file_create_path() .'/xcss';
+      $dir = file_create_path() .'/xcss';
       break;
 
     case 'xcss':
-      $path = variable_get('xcss_master_file_path', FALSE);
-      if(!$path) {
-        $path = drupal_get_path('theme', variable_get('theme_default', 'garland'));
+      $dir = variable_get('xcss_master_file_path', FALSE);
+      if(!$dir) {
+        $dir = drupal_get_path('theme', variable_get('theme_default', 'garland'));
       }
       break;
+      
+    default:
+      return FALSE;
   }
-  return $file_name ? $path . '/master.'. $type : $path;
+  
+  switch($op) {
+    case 'dir':
+      return $dir;
+      
+    case 'list':
+      //get all the files in the directory.
+      return file_scan_directory($dir, '.'. $type);
+
+    case 'file':
+      //get the full path to the xcss file from the basename
+      return sprintf('%s/%s.%s', $dir, $a, $type);
+  }
+
 }
 
 

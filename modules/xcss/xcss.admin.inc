@@ -23,9 +23,9 @@ function xcss_settings() {
   );
   $form['xcss_master_file_path'] = array(
     '#type' => 'textfield',
-    '#title' => t('Path to Master xCSS file'),
-    '#description' => t('Create a file master.xcss in this directory.'),
-    '#default_value' => xcss_path_to_file('xcss'),
+    '#title' => t('Path to xCSS files'),
+    '#description' => t('xCSS will scan this directory recursively and save the xCSS files in your files/xcss directory.'),
+    '#default_value' => xcss_fileapi('xcss', 'dir'),
   );
 
   // Clear the xCSS cache when submitted.
